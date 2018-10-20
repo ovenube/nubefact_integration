@@ -1,0 +1,18 @@
+include MANIFEST.in
+include requirements.txt
+include *.json
+include *.md
+include *.py
+include *.txt
+recursive-include nubefact_integration *.css
+recursive-include nubefact_integration *.csv
+recursive-include nubefact_integration *.html
+recursive-include nubefact_integration *.ico
+recursive-include nubefact_integration *.js
+recursive-include nubefact_integration *.json
+recursive-include nubefact_integration *.md
+recursive-include nubefact_integration *.png
+recursive-include nubefact_integration *.py
+recursive-include nubefact_integration *.svg
+recursive-include nubefact_integration *.txt
+recursive-exclude nubefact_integration *.pyc
