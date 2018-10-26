@@ -19,3 +19,15 @@ def test_connection(url, token):
 	}
 	response = requests.post(url, headers=headers)
 	return json.loads(response.content)
+
+def get_autentication():
+	token = frappe.db.get_single_value("Autenticacion", "token_nubefact")
+	headers = {
+		"Authorization": token,
+		"Content-Type": "application/json"
+	}
+	return headers
+
+def get_url():
+	url = frappe.db.get_single_value("Autenticacion", "ruta_nubefact")
+	return url
