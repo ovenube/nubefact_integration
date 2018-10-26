@@ -17,7 +17,7 @@ def after_install():
             # Do something with your data
             doc = frappe.new_doc('Tipos de Transaccion Sunat')
             doc.codigo_tipo_transaccion = val[0]
-            doc.nombre_tipo_transaccion = val[1]
+            doc.nombre_tipo_transaccion = val[1].decode('utf-8')
             doc.insert()
 
     path = os.path.join(my_path, "tipos_notas_credito.csv")
@@ -30,7 +30,7 @@ def after_install():
             # Do something with your data
             doc = frappe.new_doc('Tipos de Notas de Credito')
             doc.codigo_notas_credito = val[0]
-            doc.nombre_notas_credito = val[1]
+            doc.nombre_notas_credito = val[1].decode('utf-8')
             doc.insert()
 
     path = os.path.join(my_path, "tipos_notas_debito.csv")
@@ -43,5 +43,5 @@ def after_install():
             # Do something with your data
             doc = frappe.new_doc('Tipos de Notas de Debito')
             doc.codigo_notas_debito = val[0]
-            doc.nombre_notas_debito = val[1]
+            doc.nombre_notas_debito = val[1].decode('utf-8')
             doc.insert()
