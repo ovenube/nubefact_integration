@@ -90,7 +90,7 @@ def send_document(invoice, doctype):
                     "descuento": str(round(item.discount_amount, 2)),
                     "subtotal": str(round(item.base_net_amount, 2) * mult),
                     "tipo_de_igv": "1",
-                    "igv": str(round(item.amount - item.base_net_amount, 2) * mult),
+                    "igv": str(round(item.amount - item.net_amount, 2) * mult),
                     "total": str(round(item.amount, 2) * mult),
                     "anticipo_regularizacion": "false",
                     "anticipo_documento_serie": "",
