@@ -34,7 +34,7 @@ def get_igv(name, doctype):
         tax = frappe.db.get_single_value("Configuracion", "igv_compras")
         tax_name = frappe.db.get_value("Purchase Taxes and Charges", filters={"parent": name, "account_head": tax})
         doc_tax = frappe.get_doc("Purchase Taxes and Charges", tax_name)
-    return doc_tax.rate, doc_tax.tax_amount
+    return doc_tax.rate, doc_tax.tax_amount, doc_tax.included_in_print_rate
 
 def get_tipo_producto(item_name):
     producto = frappe.get_doc("Item", item_name)

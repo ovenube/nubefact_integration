@@ -22,7 +22,7 @@ def send_document(invoice, doctype):
             codigo_nota_credito = ""
             mult = 1
             doc = frappe.get_doc("Sales Invoice", invoice)
-            igv, monto_impuesto = get_igv(invoice, doctype)
+            igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
             if doc.is_return == 1:
                 return_type, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
                 codigo_nota_credito = doc.codigo_nota_credito
@@ -86,9 +86,9 @@ def send_document(invoice, doctype):
                     "descripcion": item.item_name,
                     "cantidad": str(item.qty * mult),
                     "valor_unitario": str(round(item.net_rate, 2)),
-                    "precio_unitario": str(round(item.rate, 2)),
+                    "precio_unitario": str(round(item.rate, 2)) if igv_inc == 1 else str(round(item.net_rate, 2) * 1.18),
                     "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
-                    "subtotal": str(round(item.net_amount, 2) * mult),
+                    "subtotal": str(round(item.net_amount, 2) * mult if igv_inc == 1 else str(round(item.net_amount, 2) * mult * 1.18)),
                     "tipo_de_igv": "1",
                     "igv": str(round(item.net_amount * igv / 100, 2) * mult),
                     "total": str(round(item.amount, 2) * mult),
