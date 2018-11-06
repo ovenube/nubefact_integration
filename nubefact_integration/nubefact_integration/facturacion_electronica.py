@@ -88,10 +88,10 @@ def send_document(invoice, doctype):
                     "valor_unitario": str(round(item.net_rate, 2)),
                     "precio_unitario": str(round(item.rate, 2)) if igv_inc == 1 else str(round(item.net_rate, 2) * 1.18),
                     "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
-                    "subtotal": str(round(item.net_amount, 2) * mult if igv_inc == 1 else str(round(item.net_amount, 2) * mult * 1.18)),
+                    "subtotal": str(round(item.net_amount, 2) * mult),
                     "tipo_de_igv": "1",
                     "igv": str(round(item.net_amount * igv / 100, 2) * mult),
-                    "total": str(round(item.amount, 2) * mult),
+                    "total": str(round(item.amount, 2) * mult) if igv_inc == 1 else str(round(item.net_amount, 2) * mult * 1.18),
                     "anticipo_regularizacion": "false",
                     "anticipo_documento_serie": "",
                     "anticipo_documento_numero": ""
