@@ -27,13 +27,19 @@ def get_moneda(currency):
 
 def get_igv(name, doctype):
     if doctype == "Sales Invoice":
-        tax = frappe.db.get_single_value("Configuracion", "igv_ventas")
-        tax_name = frappe.db.get_value("Sales Taxes and Charges", filters={"parent": name, "account_head": tax})
-        doc_tax = frappe.get_doc("Sales Taxes and Charges", tax_name)
+        conf_tax = frappe.db.get_single_value("Configuracion", "igv_ventas")
+        account_head = frappe.db.get_value("Sales Taxes and Charges", filters={"parent": conf_tax})
+        tax = frappe.get_doc("Sales Taxes and Charges", account_head)
+        doc_tax_name = frappe.db.get_value("Sales Taxes and Charges",
+                                           filters={"account_head": tax.account_head, "parent": name})
+        doc_tax = frappe.get_doc("Sales Taxes and Charges", doc_tax_name)
     elif doctype == "Purchase Invoice":
-        tax = frappe.db.get_single_value("Configuracion", "igv_compras")
-        tax_name = frappe.db.get_value("Purchase Taxes and Charges", filters={"parent": name, "account_head": tax})
-        doc_tax = frappe.get_doc("Purchase Taxes and Charges", tax_name)
+        conf_tax = frappe.db.get_single_value("Configuracion", "igv_ventas")
+        account_head = frappe.db.get_value("Purchase Taxes and Charges", filters={"parent": conf_tax})
+        tax = frappe.get_doc("Purchase Taxes and Charges", account_head)
+        doc_tax_name = frappe.db.get_value("Purchase Taxes and Charges",
+                                           filters={"account_head": tax.account_head, "parent": name})
+        doc_tax = frappe.get_doc("Purchase Taxes and Charges", doc_tax_name)
     return doc_tax.rate, doc_tax.tax_amount, doc_tax.included_in_print_rate
 
 def get_tipo_producto(item_name):
