@@ -89,13 +89,13 @@ after_install = "nubefact_integration.install.after_install"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
+scheduler_events = {
 # 	"all": [
 # 		"nubefact_integration.tasks.all"
 # 	],
-# 	"daily": [
-# 		"nubefact_integration.tasks.daily"
-# 	],
+    "all": [
+        "nubefact_integration.tasks.daily"
+    ],
 # 	"hourly": [
 # 		"nubefact_integration.tasks.hourly"
 # 	],
@@ -105,7 +105,7 @@ after_install = "nubefact_integration.install.after_install"
 # 	"monthly": [
 # 		"nubefact_integration.tasks.monthly"
 # 	]
-# }
+}
 
 # Testing
 # -------

@@ -19,7 +19,7 @@ def get_serie_correlativo(name):
     return tipo, serie, correlativo
 
 def get_moneda(currency):
-    if currency == "PEN":
+    if currency == "PEN" or currency == "SOL":
         moneda = 1
     elif currency == "USD":
         moneda = 2

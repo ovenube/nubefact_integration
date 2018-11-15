@@ -6,6 +6,7 @@ from nubefact_integration.nubefact_integration.doctype.autenticacion.autenticaci
 from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online
 import requests
 import json
+import datetime
 
 @frappe.whitelist()
 def send_document(invoice, doctype):
@@ -17,7 +18,8 @@ def send_document(invoice, doctype):
         return_type = ""
         return_serie = ""
         return_correlativo = ""
-        codigo_nota = ""
+        codigo_nota_credito = ""
+        codigo_nota_debito = ""
         name_user = ""
         if doctype == "Sales Invoice":
             mult = 1
@@ -26,7 +28,7 @@ def send_document(invoice, doctype):
             igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
             if doc.is_return == 1:
                 tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
-                codigo_nota = doc.codigo_nota_credito
+                codigo_nota_credito = doc.codigo_nota_credito
                 mult = -1
                 return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
         elif doctype == "Purchase Invoice":
@@ -35,8 +37,8 @@ def send_document(invoice, doctype):
             igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
             name_user = doc.supplier_name
             if doc.is_return == 1:
-                return_type = "1" if doc.tipo_comprobante_proveedor == "1" else "2"
-                codigo_nota = doc.codigo_nota_debito
+                return_type = "1" if doc.codigo_comprobante_proveedor == "1" else "2"
+                codigo_nota_debito = doc.codigo_nota_debito
                 return_serie = doc.bill_series
                 return_correlativo = doc.bill_no
                 mult = -1
@@ -77,8 +79,8 @@ def send_document(invoice, doctype):
                 "documento_que_se_modifica_tipo": return_type,
                 "documento_que_se_modifica_serie": return_serie,
                 "documento_que_se_modifica_numero": return_correlativo,
-                "tipo_de_nota_de_credito": str(codigo_nota),
-                "tipo_de_nota_de_debito": "",
+                "tipo_de_nota_de_credito": str(codigo_nota_credito),
+                "tipo_de_nota_de_debito": str(codigo_nota_debito),
                 "enviar_automaticamente_a_la_sunat": "true",
                 "enviar_automaticamente_al_cliente": "false",
                 "codigo_unico": "",
@@ -114,5 +116,75 @@ def send_document(invoice, doctype):
         return ""
 
 @frappe.whitelist()
-def cancel_document(invoice, doctype):
-    pass
+def consult_document(invoice, doctype):
+    tipo, serie, correlativo = get_serie_correlativo(invoice)
+    online = get_serie_online(tipo + "-" + serie)
+    if online:
+        url = get_url()
+        headers = get_autentication()
+        if doctype == "Sales Invoice":
+            doc = frappe.get_doc("Sales Invoice", invoice)
+        elif doctype == "Purchase Invoice":
+            doc = frappe.get_doc("Purchase Invoice", invoice)
+        content = {
+            "operacion": "consultar_comprobante",
+            "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
+            "serie": serie,
+            "numero": correlativo
+        }
+        response = requests.post(url, headers=headers, data=json.dumps(content))
+        return json.loads(response.content)
+    else:
+        return ""
+
+@frappe.whitelist()
+def cancel_document(invoice, doctype, motivo):
+    tipo, serie, correlativo = get_serie_correlativo(invoice)
+    online = get_serie_online(tipo + "-" + serie)
+    if online:
+        url = get_url()
+        headers = get_autentication()
+        data = consult_document(invoice, doctype)
+        if data["key"] != "":
+            content = {
+                "operacion": "generar_anulacion",
+                "tipo_de_comprobante": data["tipo_de_comprobante"],
+                "serie": data["serie"],
+                "numero": data["numero"],
+                "motivo": motivo,
+                "codigo_unico": ""
+            }
+            response = requests.post(url, headers=headers, data=json.dumps(content))
+            if doctype == "Sales Invoice":
+                frappe.db.sql(
+                    """UPDATE `tabSales Invoice` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}'""".format(
+                        datetime.datetime.now(), invoice))
+                frappe.db.commit()
+            else:
+                frappe.db.sql(
+                    """UPDATE `tabPurchase Invoice` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}'""".format(
+                        datetime.datetime.now(), invoice))
+                frappe.db.commit()
+            return json.loads(response.content)
+    else:
+        return ""
+
+@frappe.whitelist()
+def consult_cancel_document(invoice, doctype):
+    tipo, serie, correlativo = get_serie_correlativo(invoice)
+    online = get_serie_online(tipo + "-" + serie)
+    if online:
+        url = get_url()
+        headers = get_autentication()
+        data = consult_document(invoice, doctype)
+        if data["key"] != "":
+            content = {
+                "operacion": "consultar_anulacion",
+                "tipo_de_comprobante": data["tipo_de_comprobante"],
+                "serie": data["serie"],
+                "numero": data["numero"]
+            }
+            response = requests.post(url, headers=headers, data=json.dumps(content))
+            return json.loads(response.content)
+    else:
+        return ""
