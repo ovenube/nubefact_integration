@@ -15,7 +15,7 @@ def daily():
             status = consult_cancel_document(inv.name, "Sales Invoice")
             if status["aceptada_por_sunat"]:
                 frappe.db.sql(
-                    """UPDATE `tabSales Invoice` SET estado_anulacion='Cancelado' WHERE name='{0}'""".format(inv.name))
+                    """UPDATE `tabSales Invoice` SET estado_anulacion='Aceptado' WHERE name='{0}'""".format(inv.name))
                 frappe.db.commit()
                 inv.cancel()
             else:
@@ -28,7 +28,7 @@ def daily():
             status = consult_cancel_document(inv.name, "Purchase Invoice")
             if status["aceptada_por_sunat"]:
                 frappe.db.sql(
-                    """UPDATE `tabPurchases Invoice` SET estado_anulacion='Cancelado' WHERE name='{0}'""".format(
+                    """UPDATE `tabPurchases Invoice` SET estado_anulacion='Aceptado' WHERE name='{0}'""".format(
                         inv.name))
                 frappe.db.commit()
                 inv.cancel()
