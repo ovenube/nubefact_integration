@@ -93,7 +93,7 @@ scheduler_events = {
 # 	"all": [
 # 		"nubefact_integration.tasks.all"
 # 	],
-    "all": [
+    "daily": [
         "nubefact_integration.tasks.daily"
     ],
 # 	"hourly": [
