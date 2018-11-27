@@ -29,8 +29,8 @@ def get_tipo_transaccion_compras(supplier):
 
 @frappe.whitelist()
 def get_tipo_transaccion_fee(student):
-	cliente = frappe.get_doc("Student", student)
-	if cliente.codigo_tipo_documento in ['-', '1', '4', '6']:
+	student = frappe.get_doc("Student", student)
+	if student.codigo_tipo_documento in ['-', '1', '4', '6']:
 		transaccion = frappe.get_doc("Tipos de Transaccion Sunat", "VENTA INTERNA")
 	else:
 		transaccion = frappe.get_doc("Tipos de Transaccion Sunat", "NO DOMICILIADO")

@@ -119,7 +119,6 @@ def get_doc_serie(doctype, is_return, contingencia, codigo_tipo_documento="", co
                         doc_series.append(serie.serie_boleta)
     elif doctype == "Purchase Invoice":
         if is_return == "1":
-            print codigo_comprobante
             comprobante = frappe.get_doc("Tipos de Comprobante", "Nota de débito")
             if contingencia == "1":
                 series = configuracion.serie_nota_debito_contingencia

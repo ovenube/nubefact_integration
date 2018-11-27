@@ -3,9 +3,7 @@
 frappe.provide("nubefact_integration.autenticacion")
 
 frappe.ui.form.on('Autenticacion', {
-	refresh: function(frm) {
-		nubefact_integration.autenticacion.check_mandatory_to_set_button(frm);
-	}
+
 });
 
 frappe.ui.form.on('Autenticacion', 'ruta_nubefact', function(frm) {
