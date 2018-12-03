@@ -93,9 +93,9 @@ scheduler_events = {
 # 	"all": [
 # 		"nubefact_integration.tasks.all"
 # 	],
-    "daily": [
-        "nubefact_integration.tasks.daily"
-    ],
+#    "daily": [
+#        "nubefact_integration.tasks.daily"
+#    ],
 # 	"hourly": [
 # 		"nubefact_integration.tasks.hourly"
 # 	],
@@ -105,6 +105,14 @@ scheduler_events = {
 # 	"monthly": [
 # 		"nubefact_integration.tasks.monthly"
 # 	]
+    "cron": {
+        "30 0 * * *":[
+            "nubefact_integration.tasks.daily"
+        ],
+        "30 12 * * *":[
+            "nubefact_integration.tasks.daily"
+        ],
+    }
 }
 
 # Testing
