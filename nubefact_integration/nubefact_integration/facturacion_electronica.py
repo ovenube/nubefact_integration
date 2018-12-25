@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion.autenticacion import get_autentication, get_url
-from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online
+from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_tax_id_conductor, get_tax_id_transportista, get_ubigeo
 import requests
 import json
 import datetime
@@ -91,7 +91,7 @@ def send_document(invoice, doctype):
                     "anticipo_documento_serie": "",
                     "anticipo_documento_numero": ""
                 })
-        else:
+        elif doctype == "Sales Invoice" or doctype == "Purchase Invoice":
             if doctype == "Sales Invoice":
                 mult = 1
                 doc = frappe.get_doc("Sales Invoice", invoice)
@@ -181,6 +181,52 @@ def send_document(invoice, doctype):
                     "anticipo_documento_serie": "",
                     "anticipo_documento_numero": ""
             })
+        elif doctype == "Delivery Note":
+            doc = frappe.get_doc("Delivery Note", invoice)
+            content = {
+                "operacion": "generar_guia",
+                "tipo_de_comprobante": "7",
+                "serie": serie,
+                "numero": correlativo,
+                "cliente_tipo_de_documento": doc.codigo_tipo_documento,
+                "cliente_numero_de_documento": doc.tax_id,
+                "cliente_denominacion": doc.customer_name,
+                "cliente_direccion": doc.address_display,
+                "cliente_email": doc.contact_email,
+                "cliente_email_1": "",
+                "cliente_email_2": "",
+                "fecha_de_emision": doc.get_formatted("posting_date"),
+                "observaciones": "observaciones",
+                "motivo_de_traslado": doc.codigo_motivo_traslado,
+                "peso_bruto_total": doc.total_net_weight,
+                "numero_de_bultos": "0",
+                "tipo_de_transporte": doc.codigo_motivo_traslado,
+                "fecha_de_inicio_de_traslado": doc.lr_date,
+                "transportista_documento_tipo": doc.codigo_documento_identidad_proveedor,
+                "transportista_documento_numero": get_tax_id_transportista(doc.transporter),
+                "transportista_denominacion": doc.transporter_name,
+                "transportista_placa_numero": doc.vehicle_no,
+                "conductor_documento_tipo": doc.codigo_documento_identidad_conductor,
+                "conductor_documento_numero": get_tax_id_conductor(doc.driver),
+                "conductor_denominacion": doc.driver_name,
+                "punto_de_partida_ubigeo": get_ubigeo(doc.company_address),
+                "punto_de_partida_direccion": doc.company_address_display,
+                "punto_de_llegada_ubigeo": get_ubigeo(doc.customer_address),
+                "punto_de_llegada_direccion": doc.address_display,
+                "enviar_automaticamente_a_la_sunat": "true",
+                "enviar_automaticamente_al_cliente": "false",
+                "codigo_unico": "",
+                "formato_de_pdf": "",
+            }
+            for item in doc.items:
+                tipo_producto = get_tipo_producto(item.item_code)
+                content['items'].append({
+                    "unidad_de_medida": tipo_producto,
+                    "codigo": item.item_code,
+                    "descripcion": item.item_name,
+                    "cantidad": str(item.qty)
+            })
+            content['items'] = []
         response = requests.post(url, headers=headers, data=json.dumps(content))
         return json.loads(response.content)
     else:

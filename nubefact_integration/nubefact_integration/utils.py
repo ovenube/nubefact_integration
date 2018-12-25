@@ -4,19 +4,31 @@ from __future__ import unicode_literals
 import frappe
 
 def tipo_de_comprobante(codigo):
-    if codigo == "1":
+    if codigo == "01":
         tipo_comprobante = 1
-    elif codigo == "3":
+    elif codigo == "03":
         tipo_comprobante = 2
-    elif codigo == "7":
+    elif codigo == "07":
         tipo_comprobante = 3
-    elif codigo == "8":
+    elif codigo == "08":
         tipo_comprobante = 4
     return tipo_comprobante
 
 def get_serie_correlativo(name):
     tipo, serie, correlativo = name.split("-")
     return tipo, serie, correlativo
+
+def get_tax_id_transportista(name):
+    doc = frappe.get_doc("Supplier", name)
+    return doc.tax_id
+
+def get_tax_id_conductor(name):
+    doc = frappe.get_doc("Driver", name)
+    return doc.tax_id
+
+def get_ubigeo(address):
+    doc = frappe.get_doc("Address", address)
+    return doc.ubigeo
 
 def get_moneda(currency):
     if currency == "PEN" or currency == "SOL":

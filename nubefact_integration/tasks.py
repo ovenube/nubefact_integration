@@ -8,6 +8,8 @@ def daily():
                                     fields=['name', 'hora_cancelacion'])
     canceled_purchases = frappe.get_all("Purchase Invoice", filters={'estado_anulacion': 'En proceso'},
                                         fields=['name', 'hora_cancelacion'])
+    canceled_fees = frappe.get_all("Fees", filters={'estado_anulacion': 'En proceso'},
+                                        fields=['name', 'hora_cancelacion'])
     for sales in canceled_sales:
         inv = frappe.get_doc("Sales Invoice", sales['name'])
         wait_time = 0.25 * 3600 if inv.codigo_comprobante == "1" or inv.codigo_comprobante == "7" else 24 * 3600
@@ -36,4 +38,19 @@ def daily():
                 frappe.db.sql(
                     """UPDATE `tabPurchases Invoice` SET estado_anulacion='Rechazado' WHERE name='{0}'""".format(
                         inv.name))
+                frappe.db.commit()
+    for fees in canceled_fees:
+        fee = frappe.get_doc("Fees", fees['name'])
+        if (datetime.datetime.now() - fees['hora_cancelacion']).total_seconds() > 0.25 * 3600:
+            status = consult_cancel_document(fee.name, "Fees")
+            if status["aceptada_por_sunat"]:
+                frappe.db.sql(
+                    """UPDATE `tabPurchases Invoice` SET estado_anulacion='Aceptado' WHERE name='{0}'""".format(
+                        fee.name))
+                frappe.db.commit()
+                fee.cancel()
+            else:
+                frappe.db.sql(
+                    """UPDATE `tabPurchases Invoice` SET estado_anulacion='Rechazado' WHERE name='{0}'""".format(
+                        fee.name))
                 frappe.db.commit()

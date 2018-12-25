@@ -23,6 +23,8 @@ frappe.ui.form.on('Configuracion', {
 				frm.refresh_field("serie_nota_debito");
 				frappe.meta.get_docfield("Detalle Serie Nota de Debito Electronica Contingencia","serie_nota_debito_contingencia", frm.doc.name).options = r.message["compra"];
 				frm.refresh_field("serie_nota_debito_contingencia");
+				frappe.meta.get_docfield("Detalle Serie Guia de Remision Electronica","serie_guia_remision", frm.doc.name).options = r.message["guia"];
+				frm.refresh_field("serie_guia_remision");
 			}
 		});
 	}
