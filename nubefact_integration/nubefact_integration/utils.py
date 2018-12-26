@@ -18,13 +18,13 @@ def get_serie_correlativo(name):
     tipo, serie, correlativo = name.split("-")
     return tipo, serie, correlativo
 
-def get_tax_id_transportista(name):
+def get_doc_transportista(name):
     doc = frappe.get_doc("Supplier", name)
-    return doc.tax_id
+    return doc.codigo_tipo_documento, doc.tax_id
 
-def get_tax_id_conductor(name):
+def get_doc_conductor(name):
     doc = frappe.get_doc("Driver", name)
-    return doc.tax_id
+    return doc.codigo_documento_identidad, doc.tax_id
 
 def get_ubigeo(address):
     doc = frappe.get_doc("Address", address)
@@ -66,6 +66,7 @@ def get_serie_online(doc_serie):
     online_serie =[]
     online = False
     configuracion = frappe.get_doc("Configuracion", "Configuracion")
+    #recorre todos los tipos de comprobante y almacena las series online en un diccionario
     series = configuracion.serie_factura
     for serie in series:
         if serie.online:
@@ -98,6 +99,11 @@ def get_serie_online(doc_serie):
     for serie in series:
         if serie.online:
             online_serie.append(serie.serie_nota_debito_contingencia)
+    series = configuracion.serie_guia_remision
+    for serie in series:
+        if serie.online:
+            online_serie.append(serie.serie_guia_remision)
+    #devuelve True si el serie es online
     for serie in online_serie:
         if doc_serie in serie:
             online = True

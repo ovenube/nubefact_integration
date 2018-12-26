@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion.autenticacion import get_autentication, get_url
-from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_tax_id_conductor, get_tax_id_transportista, get_ubigeo
+from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_ubigeo
 import requests
 import json
 import datetime
@@ -12,6 +12,8 @@ import datetime
 def send_document(invoice, doctype):
     tipo, serie, correlativo = get_serie_correlativo(invoice)
     online = get_serie_online(tipo + "-" + serie)
+    print doctype
+    print online
     if online:
         url = get_url()
         headers = get_autentication()
@@ -183,6 +185,8 @@ def send_document(invoice, doctype):
             })
         elif doctype == "Delivery Note":
             doc = frappe.get_doc("Delivery Note", invoice)
+            doc_transportista, tax_id_transportista = get_doc_transportista(doc.transporter)
+            doc_conductor, tax_id_conductor = get_doc_conductor(doc.driver)
             content = {
                 "operacion": "generar_guia",
                 "tipo_de_comprobante": "7",
@@ -201,13 +205,13 @@ def send_document(invoice, doctype):
                 "peso_bruto_total": doc.total_net_weight,
                 "numero_de_bultos": "0",
                 "tipo_de_transporte": doc.codigo_motivo_traslado,
-                "fecha_de_inicio_de_traslado": doc.lr_date,
-                "transportista_documento_tipo": doc.codigo_documento_identidad_proveedor,
-                "transportista_documento_numero": get_tax_id_transportista(doc.transporter),
+                "fecha_de_inicio_de_traslado": doc.get_formatted("lr_date"),
+                "transportista_documento_tipo": doc_transportista,
+                "transportista_documento_numero": tax_id_transportista,
                 "transportista_denominacion": doc.transporter_name,
                 "transportista_placa_numero": doc.vehicle_no,
-                "conductor_documento_tipo": doc.codigo_documento_identidad_conductor,
-                "conductor_documento_numero": get_tax_id_conductor(doc.driver),
+                "conductor_documento_tipo": doc_conductor,
+                "conductor_documento_numero": tax_id_conductor,
                 "conductor_denominacion": doc.driver_name,
                 "punto_de_partida_ubigeo": get_ubigeo(doc.company_address),
                 "punto_de_partida_direccion": doc.company_address_display,
@@ -218,6 +222,7 @@ def send_document(invoice, doctype):
                 "codigo_unico": "",
                 "formato_de_pdf": "",
             }
+            content['items'] = []
             for item in doc.items:
                 tipo_producto = get_tipo_producto(item.item_code)
                 content['items'].append({
@@ -226,7 +231,7 @@ def send_document(invoice, doctype):
                     "descripcion": item.item_name,
                     "cantidad": str(item.qty)
             })
-            content['items'] = []
+            print content
         response = requests.post(url, headers=headers, data=json.dumps(content))
         return json.loads(response.content)
     else:
@@ -245,6 +250,8 @@ def consult_document(invoice, doctype):
             doc = frappe.get_doc("Purchase Invoice", invoice)
         elif doctype == 'Fees':
             doc = frappe.get_doc("Fees", invoice)
+        elif doctype == "Delivery Note":
+            doc = frappe.get_doc("Delivery Note", invoice)
         content = {
             "operacion": "consultar_comprobante",
             "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
@@ -287,6 +294,11 @@ def cancel_document(invoice, doctype, motivo):
             elif doctype == 'Fees':
                 frappe.db.sql(
                     """UPDATE `tabFees` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}'""".format(
+                        datetime.datetime.now(), invoice))
+                frappe.db.commit()
+            elif doctype == 'Delivery Note':
+                frappe.db.sql(
+                    """UPDATE `tabDelivery Note` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}'""".format(
                         datetime.datetime.now(), invoice))
                 frappe.db.commit()
             return json.loads(response.content)
