@@ -12,6 +12,8 @@ def tipo_de_comprobante(codigo):
         tipo_comprobante = 3
     elif codigo == "08":
         tipo_comprobante = 4
+    elif codigo == "09":
+        tipo_comprobante = 7
     return tipo_comprobante
 
 def get_serie_correlativo(name):
@@ -19,12 +21,10 @@ def get_serie_correlativo(name):
     return tipo, serie, correlativo
 
 def get_doc_transportista(name):
-    doc = frappe.get_doc("Supplier", name)
-    return doc.codigo_tipo_documento, doc.tax_id
+    return frappe.get_doc("Supplier", name)
 
 def get_doc_conductor(name):
-    doc = frappe.get_doc("Driver", name)
-    return doc.codigo_documento_identidad, doc.tax_id
+    return frappe.get_doc("Driver", name)
 
 def get_ubigeo(address):
     doc = frappe.get_doc("Address", address)

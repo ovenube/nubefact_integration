@@ -185,8 +185,8 @@ def send_document(invoice, doctype):
             })
         elif doctype == "Delivery Note":
             doc = frappe.get_doc("Delivery Note", invoice)
-            doc_transportista, tax_id_transportista = get_doc_transportista(doc.transporter)
-            doc_conductor, tax_id_conductor = get_doc_conductor(doc.driver)
+            doc_transportista = get_doc_transportista(doc.transporter)
+            doc_conductor = get_doc_conductor(doc.driver)
             content = {
                 "operacion": "generar_guia",
                 "tipo_de_comprobante": "7",
@@ -206,13 +206,13 @@ def send_document(invoice, doctype):
                 "numero_de_bultos": "0",
                 "tipo_de_transporte": doc.codigo_motivo_traslado,
                 "fecha_de_inicio_de_traslado": doc.get_formatted("lr_date"),
-                "transportista_documento_tipo": doc_transportista,
-                "transportista_documento_numero": tax_id_transportista,
-                "transportista_denominacion": doc.transporter_name,
+                "transportista_documento_tipo": doc_transportista.codigo_tipo_documento,
+                "transportista_documento_numero": doc_transportista.tax_id,
+                "transportista_denominacion": doc_transportista.supplier_name,
                 "transportista_placa_numero": doc.vehicle_no,
-                "conductor_documento_tipo": doc_conductor,
-                "conductor_documento_numero": tax_id_conductor,
-                "conductor_denominacion": doc.driver_name,
+                "conductor_documento_tipo": doc_conductor.codigo_documento_identidad,
+                "conductor_documento_numero": doc_conductor.tax_id,
+                "conductor_denominacion": doc_conductor.full_name,
                 "punto_de_partida_ubigeo": get_ubigeo(doc.company_address),
                 "punto_de_partida_direccion": doc.company_address_display,
                 "punto_de_llegada_ubigeo": get_ubigeo(doc.customer_address),
@@ -254,7 +254,7 @@ def consult_document(invoice, doctype):
             doc = frappe.get_doc("Delivery Note", invoice)
         content = {
             "operacion": "consultar_comprobante",
-            "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
+            "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_tipo_comprobante)),
             "serie": serie,
             "numero": correlativo
         }
