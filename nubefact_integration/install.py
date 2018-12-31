@@ -7,6 +7,7 @@ import os.path
 def after_install():
     my_path = os.path.abspath(os.path.dirname(__file__))
     my_path = os.path.join(my_path, "imports/")
+
     path = os.path.join(my_path, "tipos_de_transaccion.csv")
     with open(path, 'r') as csvfile:
         reader = csv.reader(csvfile, delimiter=str(','))
@@ -44,4 +45,30 @@ def after_install():
             doc = frappe.new_doc('Tipos de Notas de Debito')
             doc.codigo_notas_debito = val[0]
             doc.nombre_notas_debito = val[1].decode('utf-8')
+            doc.insert()
+
+    path = os.path.join(my_path, "motivo_traslado.csv")
+    with open(path, 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=str(','))
+        for idx, val in enumerate(reader):
+            if idx == 0:
+                continue  # If csv have first row with headers
+
+            # Do something with your data
+            doc = frappe.new_doc('Tipos de Notas de Debito')
+            doc.codigo_motivo_traslado = val[0]
+            doc.nombre_motivo_traslado = val[1].decode('utf-8')
+            doc.insert()
+
+    path = os.path.join(my_path, "tipos_transporte.csv")
+    with open(path, 'r') as csvfile:
+        reader = csv.reader(csvfile, delimiter=str(','))
+        for idx, val in enumerate(reader):
+            if idx == 0:
+                continue  # If csv have first row with headers
+
+            # Do something with your data
+            doc = frappe.new_doc('Tipos de Notas de Debito')
+            doc.codigo_tipo_transporte = val[0]
+            doc.nombre_tipo_transporte = val[1].decode('utf-8')
             doc.insert()
