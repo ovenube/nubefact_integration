@@ -1,6 +1,6 @@
 // Copyright (c) 2018, OVENUBE and contributors
 // For license information, please see license.txt
-frappe.provide("nubefact_integration.autenticacion")
+frappe.provide("nubefact_integration.autenticacion");
 
 frappe.ui.form.on('Autenticacion', {
 
@@ -34,7 +34,7 @@ nubefact_integration.autenticacion.check_mandatory_to_fetch = function(doc) {
 	$.each(['token_nubefact'], function (i, field) {
 		if(!doc[frappe.model.scrub(field)]) frappe.throw(__("Please select {0} first", [field]));
     });
-}
+};
 
 frappe.ui.form.on('Autenticacion', 'test_connection', function(frm) {
 	nubefact_integration.autenticacion.check_mandatory_to_fetch(frm.doc);
@@ -45,7 +45,7 @@ frappe.ui.form.on('Autenticacion', 'test_connection', function(frm) {
 			'token': frm.doc.token_nubefact
 		},
 		callback: function (data) {
-			if (data.message.codigo == 10){
+			if (data.message.codigo === 10){
 				frappe.throw(data.message.errors);
 			}
 			else{

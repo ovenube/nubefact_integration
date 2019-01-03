@@ -55,7 +55,7 @@ def after_install():
                 continue  # If csv have first row with headers
 
             # Do something with your data
-            doc = frappe.new_doc('Tipos de Notas de Debito')
+            doc = frappe.new_doc('Motivos de Traslado')
             doc.codigo_motivo_traslado = val[0]
             doc.nombre_motivo_traslado = val[1].decode('utf-8')
             doc.insert()
@@ -68,7 +68,7 @@ def after_install():
                 continue  # If csv have first row with headers
 
             # Do something with your data
-            doc = frappe.new_doc('Tipos de Notas de Debito')
+            doc = frappe.new_doc('Tipos de Transporte')
             doc.codigo_tipo_transporte = val[0]
             doc.nombre_tipo_transporte = val[1].decode('utf-8')
             doc.insert()
