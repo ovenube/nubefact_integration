@@ -95,10 +95,19 @@ def send_document(invoice, doctype):
                 })
         elif doctype == "Sales Invoice" or doctype == "Purchase Invoice":
             if doctype == "Sales Invoice":
+                monto_anticipo_neto = 0
+                igv_anticipo = 0
+                anticipo_amount = 0
+                anticipo_total = 0
                 mult = 1
                 doc = frappe.get_doc("Sales Invoice", invoice)
                 name_user = doc.customer_name
                 igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
+                if doc.sales_invoice_advance is not None:
+                    advance = frappe.get_doc("Sales Invoice", doc.sales_invoice_advance)
+                    monto_anticipo_neto = round(advance.net_total, 2)
+                    anticipo_total = round(advance.grand_total)
+                    igv_anticipo, anticipo_amount, anticipo_inc = get_igv(advance.name, doctype)
                 if doc.is_return == 1:
                     tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
                     codigo_nota_credito = doc.codigo_nota_credito
@@ -132,17 +141,17 @@ def send_document(invoice, doctype):
                     "fecha_de_vencimiento": doc.get_formatted("due_date"),
                     "moneda": str(get_moneda(doc.currency)),
                     "tipo_de_cambio": str(doc.conversion_rate),
-                    "porcentaje_de_igv": str(igv * mult),
+                    "porcentaje_de_igv": str((igv - igv_anticipo) * mult),
                     "descuento_global": "",
                     "total_descuento": "",
-                    "total_anticipo": "",
-                    "total_gravada": str(round(doc.net_total, 2) * mult),
+                    "total_anticipo": monto_anticipo_neto if not monto_anticipo_neto==0 else "",
+                    "total_gravada": str(round(doc.net_total - monto_anticipo_neto, 2) * mult),
                     "total_inafecta": "",
                     "total_exonerada": "",
-                    "total_igv": str(round(monto_impuesto, 2) * mult),
+                    "total_igv": str(round(monto_impuesto - anticipo_amount, 2) * mult),
                     "total_gratuita": "",
                     "total_otros_cargos": "",
-                    "total": str(round(doc.grand_total, 2) * mult),
+                    "total": str(round(doc.grand_total - anticipo_total, 2) * mult),
                     "percepcion_tipo": "",
                     "percepcion_base_imponible": "",
                     "total_percepcion": "",
@@ -165,24 +174,60 @@ def send_document(invoice, doctype):
                     "formato_de_pdf": ""
             }
             content['items'] = []
-            for item in doc.items:
-                tipo_producto = get_tipo_producto(item.item_code)
+            if doc.sales_invoice_advance is not None:
+                advance_tipo, advance_serie, advance_correlativo = get_serie_correlativo(doc.sales_invoice_advance)
+                content['items'].append(
+                    {
+                        "unidad_de_medida": "NIU",
+                        "codigo": "001",
+                        "descripcion": "REGULARIZACIÓN DEL ANTICIPO",
+                        "cantidad": "1",
+                        "valor_unitario": str(round(doc.net_total, 2)),
+                        "precio_unitario": str(round(doc.grand_total, 2) * mult),
+                        "descuento": "",
+                        "subtotal": str(round(doc.net_total, 2)),
+                        "tipo_de_igv": "1",
+                        "igv": str(round(monto_impuesto, 2)),
+                        "total": str(round(doc.grand_total, 2) * mult),
+                        "anticipo_regularizacion": "false",
+                        "anticipo_documento_serie": "",
+                        "anticipo_documento_numero": ""
+                    }),
                 content['items'].append({
-                    "unidad_de_medida": tipo_producto,
-                    "codigo": item.item_code,
-                    "descripcion": item.item_name,
-                    "cantidad": str(item.qty * mult),
-                    "valor_unitario": str(round(item.net_rate, 2)),
-                    "precio_unitario": str(round(item.rate, 2)) if igv_inc == 1 else str(round(item.net_rate, 2) * 1.18),
-                    "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
-                    "subtotal": str(round(item.net_amount, 2) * mult),
-                    "tipo_de_igv": "1",
-                    "igv": str(round(item.net_amount * igv / 100, 2) * mult),
-                    "total": str(round(item.amount, 2) * mult) if igv_inc == 1 else str(round(item.net_amount, 2) * mult * 1.18),
-                    "anticipo_regularizacion": "false",
-                    "anticipo_documento_serie": "",
-                    "anticipo_documento_numero": ""
-            })
+                        "unidad_de_medida": "NIU",
+                        "codigo": "001",
+                        "descripcion": "PRIMER ANTICIPO",
+                        "cantidad": "1",
+                        "valor_unitario": str(monto_anticipo_neto),
+                        "precio_unitario": str(anticipo_total),
+                        "descuento": "",
+                        "subtotal": str(monto_anticipo_neto),
+                        "tipo_de_igv": "1",
+                        "igv": str(round(anticipo_amount, 2)),
+                        "total": str(anticipo_total),
+                        "anticipo_regularizacion": "true",
+                        "anticipo_documento_serie": str(advance_serie),
+                        "anticipo_documento_numero": str(advance_correlativo)
+                    })
+            else:
+                for item in doc.items:
+                    tipo_producto = get_tipo_producto(item.item_code)
+                    content['items'].append({
+                        "unidad_de_medida": tipo_producto,
+                        "codigo": item.item_code,
+                        "descripcion": item.item_name,
+                        "cantidad": str(item.qty * mult),
+                        "valor_unitario": str(round(item.net_rate, 2)),
+                        "precio_unitario": str(round(item.rate, 2)) if igv_inc == 1 else str(round(item.net_rate, 2) * 1.18),
+                        "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
+                        "subtotal": str(round(item.net_amount, 2) * mult),
+                        "tipo_de_igv": "1",
+                        "igv": str(round(item.net_amount * igv / 100, 2) * mult),
+                        "total": str(round(item.amount, 2) * mult) if igv_inc == 1 else str(round(item.net_amount, 2) * mult * 1.18),
+                        "anticipo_regularizacion": "false",
+                        "anticipo_documento_serie": "",
+                        "anticipo_documento_numero": ""
+                })
         elif doctype == "Delivery Note":
             doc = frappe.get_doc("Delivery Note", invoice)
             doc_transportista = get_doc_transportista(doc.transporter)

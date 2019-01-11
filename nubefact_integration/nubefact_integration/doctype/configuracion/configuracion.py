@@ -4,10 +4,13 @@
 
 from __future__ import unicode_literals
 import frappe
-from erpnext.setup.doctype.naming_series.naming_series import NamingSeries, get_default_naming_series
+from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 
 
 class Configuracion(NamingSeries):
+    def __init__(self, *args):
+        self.init = True
+
     def get_series(self):
         serie_ventas = self.get_options("Sales Invoice")
         serie_ventas.replace("\n\n", "\n")
@@ -29,6 +32,12 @@ class Configuracion(NamingSeries):
         for serie in serie_guias:
             series_dict["guia"].append(serie)
         return series_dict
+
+
+@frappe.whitelist()
+def get_product_anticipo():
+    configuracion = frappe.get_doc("Configuracion", "Configuracion")
+    return configuracion.anticipo
 
 
 @frappe.whitelist()
@@ -147,7 +156,9 @@ def get_doc_serie(doctype, is_return="", contingencia="", codigo_tipo_documento=
                         if serie.comprobante == "Boleta":
                             doc_series.append(serie.serie_nota_debito)
         else:
-            doc_series = get_default_naming_series("Purchase Invoice")
+            series = Configuracion()
+            doc_series = series.get_series()
+            doc_series = doc_series["compra"]
             return {"series": doc_series}
     elif doctype == "Delivery Note":
         comprobante = frappe.get_doc("Tipos de Comprobante", "Guía de remisión - Remitente")
