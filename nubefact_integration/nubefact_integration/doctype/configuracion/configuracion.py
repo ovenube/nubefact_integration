@@ -8,9 +8,6 @@ from erpnext.setup.doctype.naming_series.naming_series import NamingSeries
 
 
 class Configuracion(NamingSeries):
-    def __init__(self, *args):
-        self.init = True
-
     def get_series(self):
         serie_ventas = self.get_options("Sales Invoice")
         serie_ventas.replace("\n\n", "\n")
