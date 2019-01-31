@@ -27,14 +27,7 @@ nubefact_integration.autenticacion.check_mandatory_to_set_button = function(frm)
 	}
 };
 
-nubefact_integration.autenticacion.check_mandatory_to_fetch = function(doc) {
-	$.each(['ruta_nubefact'], function (i, field) {
-		if(!doc[frappe.model.scrub(field)]) frappe.throw(__("Please select {0} first", [field]));
-    });
-	$.each(['token_nubefact'], function (i, field) {
-		if(!doc[frappe.model.scrub(field)]) frappe.throw(__("Please select {0} first", [field]));
-    });
-};
+
 
 frappe.ui.form.on('Autenticacion', 'test_connection', function(frm) {
 	nubefact_integration.autenticacion.check_mandatory_to_fetch(frm.doc);
