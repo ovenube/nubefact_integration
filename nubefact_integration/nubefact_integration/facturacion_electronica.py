@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion.autenticacion import get_autentication, get_url
-from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_ubigeo
+from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_ubigeo, get_address_information
 import requests
 import json
 import datetime
@@ -12,8 +12,6 @@ import datetime
 def send_document(invoice, doctype):
     tipo, serie, correlativo = get_serie_correlativo(invoice)
     online = get_serie_online(tipo + "-" + serie)
-    print doctype
-    print online
     if online:
         url = get_url()
         headers = get_autentication()
@@ -103,6 +101,8 @@ def send_document(invoice, doctype):
                 doc = frappe.get_doc("Sales Invoice", invoice)
                 name_user = doc.customer_name
                 igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
+                if doc.customer_address:
+                    address = get_address_information(doc.customer_address)
                 if doc.sales_invoice_advance is not None:
                     advance = frappe.get_doc("Sales Invoice", doc.sales_invoice_advance)
                     monto_anticipo_neto = round(advance.net_total, 2)
@@ -118,6 +118,8 @@ def send_document(invoice, doctype):
                 doc = frappe.get_doc("Purchase Invoice", invoice)
                 igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
                 name_user = doc.supplier_name
+                if doc.supplier_address:
+                    address, email = get_address_information(doc.supplier_address)
                 if doc.is_return == 1:
                     return_type = "1" if doc.codigo_comprobante_proveedor == "1" else "2"
                     codigo_nota_debito = doc.codigo_nota_debito
@@ -133,8 +135,8 @@ def send_document(invoice, doctype):
                     "cliente_tipo_de_documento": doc.codigo_tipo_documento,
                     "cliente_numero_de_documento": doc.tax_id,
                     "cliente_denominacion": name_user,
-                    "cliente_direccion": doc.address_display if doc.address_display else "",
-                    "cliente_email": doc.contact_email if doc.contact_email else "",
+                    "cliente_direccion": address.address if address.address else "",
+                    "cliente_email": address.email if address.email else "",
                     "cliente_email_1": "",
                     "cliente_email_2": "",
                     "fecha_de_emision": doc.get_formatted("posting_date"),
@@ -232,6 +234,8 @@ def send_document(invoice, doctype):
             doc = frappe.get_doc("Delivery Note", invoice)
             doc_transportista = get_doc_transportista(doc.transporter)
             doc_conductor = get_doc_conductor(doc.driver)
+            if doc.customer_address:
+                address = get_address_information(doc.customer_address)
             content = {
                 "operacion": "generar_guia",
                 "tipo_de_comprobante": "7",
@@ -240,8 +244,8 @@ def send_document(invoice, doctype):
                 "cliente_tipo_de_documento": doc.codigo_tipo_documento,
                 "cliente_numero_de_documento": doc.tax_id,
                 "cliente_denominacion": doc.customer_name,
-                "cliente_direccion": doc.address_display,
-                "cliente_email": doc.contact_email,
+                "cliente_direccion": address.address if address.address else "",
+                "cliente_email": address.email if address.email else "",
                 "cliente_email_1": "",
                 "cliente_email_2": "",
                 "fecha_de_emision": doc.get_formatted("posting_date"),
@@ -276,7 +280,6 @@ def send_document(invoice, doctype):
                     "descripcion": item.item_name,
                     "cantidad": str(item.qty)
             })
-            print content
         response = requests.post(url, headers=headers, data=json.dumps(content))
         return json.loads(response.content)
     else:

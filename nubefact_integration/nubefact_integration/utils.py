@@ -37,6 +37,13 @@ def get_moneda(currency):
         moneda = 2
     return moneda
 
+def get_address_information(party_address):
+    address = frappe.get_doc("Address", party_address)
+    return frappe._dict({
+        "address": address.address_line1 + "-" + address.city + "-" + address.state + "-" + address.country,
+        "email": address.email_id
+    })
+
 def get_igv(name, doctype):
     if doctype == "Sales Invoice":
         conf_tax = frappe.db.get_single_value("Configuracion", "igv_ventas")
