@@ -229,7 +229,9 @@ def send_document(invoice, doctype):
             doc_conductor = get_doc_conductor(doc.driver)
             company_address = customer_address = {}
             if doc.customer_address:
-                customer_address = get_address_information(doc.customer_address)
+                address = get_address_information(doc.customer_address)
+            if doc.customer_address:
+                customer_address = get_address_information(doc.shipping_address)
             if doc.company_address:
                 company_address = get_address_information((doc.company_address))
             content = {
@@ -258,7 +260,7 @@ def send_document(invoice, doctype):
                 "conductor_documento_tipo": doc_conductor.codigo_documento_identidad,
                 "conductor_documento_numero": doc_conductor.tax_id,
                 "conductor_denominacion": doc_conductor.full_name,
-                "punto_de_partida_ubigeo": company_address.ugibeo,
+                "punto_de_partida_ubigeo": company_address.ubigeo,
                 "punto_de_partida_direccion": company_address.address,
                 "punto_de_llegada_ubigeo": customer_address.ubigeo,
                 "punto_de_llegada_direccion": customer_address.address,
