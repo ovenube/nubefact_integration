@@ -26,10 +26,6 @@ def get_doc_transportista(name):
 def get_doc_conductor(name):
     return frappe.get_doc("Driver", name)
 
-def get_ubigeo(address):
-    doc = frappe.get_doc("Address", address)
-    return doc.ubigeo
-
 def get_moneda(currency):
     if currency == "PEN" or currency == "SOL":
         moneda = 1
@@ -41,7 +37,8 @@ def get_address_information(party_address):
     address = frappe.get_doc("Address", party_address)
     return frappe._dict({
         "address": address.address_line1 + "-" + address.city + "-" + address.state + "-" + address.country,
-        "email": address.email_id
+        "email": address.email_id,
+        "ubigeo": address.ubigeo
     })
 
 def get_igv(name, doctype):

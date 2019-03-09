@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion.autenticacion import get_autentication, get_url
-from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_ubigeo, get_address_information
+from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information
 import requests
 import json
 import datetime
@@ -15,12 +15,8 @@ def send_document(invoice, doctype):
     if online:
         url = get_url()
         headers = get_autentication()
-        return_type = ""
-        return_serie = ""
-        return_correlativo = ""
-        codigo_nota_credito = ""
-        codigo_nota_debito = ""
-        name_user = ""
+        return_type = return_serie = return_correlativo = codigo_nota_credito = codigo_nota_debito = name_user = ""
+        address = {}
         if doctype == 'Fees':
             mult = 1
             doc = frappe.get_doc("Fees", invoice)
@@ -93,10 +89,7 @@ def send_document(invoice, doctype):
                 })
         elif doctype == "Sales Invoice" or doctype == "Purchase Invoice":
             if doctype == "Sales Invoice":
-                monto_anticipo_neto = 0
-                igv_anticipo = 0
-                anticipo_amount = 0
-                anticipo_total = 0
+                monto_anticipo_neto = igv_anticipo = anticipo_amount = anticipo_total = 0
                 mult = 1
                 doc = frappe.get_doc("Sales Invoice", invoice)
                 name_user = doc.customer_name
@@ -234,8 +227,11 @@ def send_document(invoice, doctype):
             doc = frappe.get_doc("Delivery Note", invoice)
             doc_transportista = get_doc_transportista(doc.transporter)
             doc_conductor = get_doc_conductor(doc.driver)
+            company_address = customer_address = {}
             if doc.customer_address:
-                address = get_address_information(doc.customer_address)
+                customer_address = get_address_information(doc.customer_address)
+            if doc.company_address:
+                company_address = get_address_information((doc.company_address))
             content = {
                 "operacion": "generar_guia",
                 "tipo_de_comprobante": "7",
@@ -262,10 +258,10 @@ def send_document(invoice, doctype):
                 "conductor_documento_tipo": doc_conductor.codigo_documento_identidad,
                 "conductor_documento_numero": doc_conductor.tax_id,
                 "conductor_denominacion": doc_conductor.full_name,
-                "punto_de_partida_ubigeo": get_ubigeo(doc.company_address),
-                "punto_de_partida_direccion": doc.company_address_display,
-                "punto_de_llegada_ubigeo": get_ubigeo(doc.customer_address),
-                "punto_de_llegada_direccion": doc.address_display,
+                "punto_de_partida_ubigeo": company_address.ugibeo,
+                "punto_de_partida_direccion": company_address.address,
+                "punto_de_llegada_ubigeo": customer_address.ubigeo,
+                "punto_de_llegada_direccion": customer_address.address,
                 "enviar_automaticamente_a_la_sunat": "true",
                 "enviar_automaticamente_al_cliente": "false",
                 "codigo_unico": "",
