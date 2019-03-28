@@ -15,7 +15,7 @@ def send_document(invoice, doctype):
     if online:
         url = get_url()
         headers = get_autentication()
-        return_type = return_serie = return_correlativo = codigo_nota_credito = codigo_nota_debito = name_user = ""
+        return_type = return_serie = return_correlativo = codigo_nota_credito = codigo_nota_debito = party_name = ""
         address = {}
         if doctype == 'Fees':
             mult = 1
@@ -92,7 +92,7 @@ def send_document(invoice, doctype):
                 monto_anticipo_neto = igv_anticipo = anticipo_amount = anticipo_total = 0
                 mult = 1
                 doc = frappe.get_doc("Sales Invoice", invoice)
-                name_user = doc.customer_name
+                party_name = doc.customer_name
                 igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
                 if doc.customer_address:
                     address = get_address_information(doc.customer_address)
@@ -110,7 +110,7 @@ def send_document(invoice, doctype):
                 mult = 1
                 doc = frappe.get_doc("Purchase Invoice", invoice)
                 igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
-                name_user = doc.supplier_name
+                party_name = doc.supplier_name
                 if doc.supplier_address:
                     address, email = get_address_information(doc.supplier_address)
                 if doc.is_return == 1:
@@ -127,7 +127,7 @@ def send_document(invoice, doctype):
                     "sunat_transaction": doc.codigo_transaccion_sunat,
                     "cliente_tipo_de_documento": doc.codigo_tipo_documento,
                     "cliente_numero_de_documento": doc.tax_id,
-                    "cliente_denominacion": name_user,
+                    "cliente_denominacion": party_name,
                     "cliente_direccion": address.address if address.address else "",
                     "cliente_email": address.email if address.email else "",
                     "cliente_email_1": "",

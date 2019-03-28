@@ -36,9 +36,9 @@ def get_moneda(currency):
 def get_address_information(party_address):
     address = frappe.get_doc("Address", party_address)
     return frappe._dict({
-        "address": address.address_line1 + "-" + address.city + "-" + address.state + "-" + address.country,
-        "email": address.email_id,
-        "ubigeo": address.ubigeo
+        "address": address.get('address_line1', "") + "-" + address.get('city', "") + "-" + address.get('state', "") + "-" + address.get('country', ""),
+        "email": address.get('email_id', ""),
+        "ubigeo": address.get('ubigeo', "")
     })
 
 def get_igv(name, doctype):
