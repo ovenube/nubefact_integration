@@ -300,7 +300,7 @@ def consult_document(invoice, doctype):
             doc = frappe.get_doc("Delivery Note", invoice)
         content = {
             "operacion": "consultar_comprobante",
-            "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_tipo_comprobante)),
+            "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
             "serie": serie,
             "numero": correlativo
         }
