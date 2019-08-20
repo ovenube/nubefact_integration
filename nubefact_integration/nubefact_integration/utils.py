@@ -58,6 +58,23 @@ def get_igv(name, doctype):
         doc_tax = frappe.get_doc("Purchase Taxes and Charges", doc_tax_name)
     return doc_tax.rate, doc_tax.tax_amount, doc_tax.included_in_print_rate
 
+def get_impuesto_bolsas_plasticas(name, doctype):
+    if doctype == "Sales Invoice":
+        conf_tax = frappe.db.get_single_value("Configuracion", "impuesto_bolsas_plasticas_ventas")
+        account_head = frappe.db.get_value("Sales Taxes and Charges", filters={"parent": conf_tax})
+        tax = frappe.get_doc("Sales Taxes and Charges", account_head)
+        doc_tax_name = frappe.db.get_value("Sales Taxes and Charges",
+                                           filters={"account_head": tax.account_head, "parent": name})
+        doc_tax = frappe.get_doc("Sales Taxes and Charges", doc_tax_name)
+    elif doctype == "Purchase Invoice":
+        conf_tax = frappe.db.get_single_value("Configuracion", "impuesto_bolsas_plasticas_ventas")
+        account_head = frappe.db.get_value("Purchase Taxes and Charges", filters={"parent": conf_tax})
+        tax = frappe.get_doc("Purchase Taxes and Charges", account_head)
+        doc_tax_name = frappe.db.get_value("Purchase Taxes and Charges",
+                                           filters={"account_head": tax.account_head, "parent": name})
+        doc_tax = frappe.get_doc("Purchase Taxes and Charges", doc_tax_name)
+    return doc_tax.rate, doc_tax.tax_amount, doc_tax.included_in_print_rate
+
 def get_tipo_producto(item_name):
     producto = frappe.get_doc("Item", item_name)
     if producto.item_group == "Servicios":

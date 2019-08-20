@@ -27,8 +27,6 @@ nubefact_integration.autenticacion.check_mandatory_to_set_button = function(frm)
 	}
 };
 
-
-
 frappe.ui.form.on('Autenticacion', 'test_connection', function(frm) {
 	nubefact_integration.autenticacion.check_mandatory_to_fetch(frm.doc);
 	frappe.call({

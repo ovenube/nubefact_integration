@@ -30,12 +30,20 @@ class Configuracion(NamingSeries):
             series_dict["guia"].append(serie)
         return series_dict
 
-
 @frappe.whitelist()
 def get_product_anticipo():
     configuracion = frappe.get_doc("Configuracion", "Configuracion")
     return configuracion.anticipo
 
+@frappe.whitelist()
+def get_productos_bolsas_plasticas():
+    configuracion = frappe.get_doc("Configuracion", "Configuracion")
+    producto_bolsas_plasticas = []
+    for row in configuracion.productos_bolsas_plasticas:
+        producto_bolsas_plasticas.append(row.producto)
+    return frappe._dict({
+        "bolsas_plasticas": producto_bolsas_plasticas
+    })
 
 @frappe.whitelist()
 def get_doc_serie(doctype, is_return="", contingencia="", codigo_tipo_documento="", codigo_comprobante=""):
