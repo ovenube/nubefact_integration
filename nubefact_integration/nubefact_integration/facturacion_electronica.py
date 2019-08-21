@@ -3,7 +3,8 @@
 from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion.autenticacion import get_autentication, get_url
-from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information
+from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information, get_impuesto_bolsas_plasticas
+from erpnext.controllers.taxes_and_totals import get_bolsas_plasticas_information
 import requests
 import json
 import datetime
@@ -94,6 +95,9 @@ def send_document(invoice, doctype):
                 doc = frappe.get_doc("Sales Invoice", invoice)
                 party_name = doc.customer_name
                 igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
+                ibp, monto_ibp, ibp_inc = get_impuesto_bolsas_plasticas(invoice, doctype)
+                producto_bolsas_plasticas = get_bolsas_plasticas_information(doctype)["productos_bolsas_plasticas"]
+                impuesto_bolsas_plasticas = get_bolsas_plasticas_information(doctype)["impuesto_bolsas_plasticas"]
                 if doc.customer_address:
                     address = get_address_information(doc.customer_address)
                 if doc.sales_invoice_advance is not None:
@@ -166,7 +170,8 @@ def send_document(invoice, doctype):
                     "placa_vehiculo": "",
                     "orden_compra_servicio": "",
                     "tabla_personalizada_codigo": "",
-                    "formato_de_pdf": ""
+                    "formato_de_pdf": "",
+                    "total_impuestos_bolsas": str(round(monto_ibp, 2) * mult) if monto_ibp != 0 else ""
             }
             content['items'] = []
             if doc.sales_invoice_advance is not None:
@@ -221,7 +226,8 @@ def send_document(invoice, doctype):
                         "total": str(round(item.amount, 2) * mult) if igv_inc == 1 else str(round(item.net_amount, 2) * mult * 1.18),
                         "anticipo_regularizacion": "false",
                         "anticipo_documento_serie": "",
-                        "anticipo_documento_numero": ""
+                        "anticipo_documento_numero": "",
+                        "impuesto_bolsas": str(item.qty * impuesto_bolsas_plasticas.tax_amount) if (item.item_code in producto_bolsas_plasticas) else ""
                 })
         elif doctype == "Delivery Note":
             doc = frappe.get_doc("Delivery Note", invoice)
