@@ -36,16 +36,6 @@ def get_product_anticipo():
     return configuracion.anticipo
 
 @frappe.whitelist()
-def get_productos_bolsas_plasticas():
-    configuracion = frappe.get_doc("Configuracion", "Configuracion")
-    producto_bolsas_plasticas = []
-    for row in configuracion.productos_bolsas_plasticas:
-        producto_bolsas_plasticas.append(row.producto)
-    return frappe._dict({
-        "bolsas_plasticas": producto_bolsas_plasticas
-    })
-
-@frappe.whitelist()
 def get_doc_serie(doctype, is_return="", contingencia="", codigo_tipo_documento="", codigo_comprobante=""):
     doc_series = []
     configuracion = frappe.get_doc("Configuracion", "Configuracion")
