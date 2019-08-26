@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion.autenticacion import get_autentication, get_url
 from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information, get_impuesto_bolsas_plasticas
-from erpnext.controllers.taxes_and_totals import get_bolsas_plasticas_information
+from erpnext.controllers.taxes_and_totals import get_plastic_bags_information
 import requests
 import json
 import datetime
@@ -91,13 +91,15 @@ def send_document(invoice, doctype):
         elif doctype == "Sales Invoice" or doctype == "Purchase Invoice":
             if doctype == "Sales Invoice":
                 monto_anticipo_neto = igv_anticipo = anticipo_amount = anticipo_total = 0
+                producto_bolsas_plasticas = []
                 mult = 1
                 doc = frappe.get_doc("Sales Invoice", invoice)
                 party_name = doc.customer_name
                 igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
                 ibp, monto_ibp, ibp_inc = get_impuesto_bolsas_plasticas(invoice, doctype)
-                producto_bolsas_plasticas = get_bolsas_plasticas_information(doctype)["productos_bolsas_plasticas"]
-                impuesto_bolsas_plasticas = get_bolsas_plasticas_information(doctype)["impuesto_bolsas_plasticas"]
+                if get_plastic_bags_information(doctype):
+                    producto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_items"]
+                    impuesto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_tax"]
                 if doc.customer_address:
                     address = get_address_information(doc.customer_address)
                 if doc.sales_invoice_advance is not None:
