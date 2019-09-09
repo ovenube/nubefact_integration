@@ -22,7 +22,7 @@ def after_install():
                 doc.nombre_tipo_transaccion = val[1].decode('utf-8')
                 doc.insert()
     except:
-        print "Tipo de Tipos de Transaccion Sunat ya migrado"
+        print("Tipo de Tipos de Transaccion Sunat ya migrado")
 
     try:
         path = os.path.join(my_path, "tipos_notas_credito.csv")
@@ -38,7 +38,7 @@ def after_install():
                 doc.nombre_notas_credito = val[1].decode('utf-8')
                 doc.insert()
     except:
-        print "Tipos de Notas de Credito ya migrado"
+        print("Tipos de Notas de Credito ya migrado")
 
     try:
         path = os.path.join(my_path, "tipos_notas_debito.csv")
@@ -54,7 +54,7 @@ def after_install():
                 doc.nombre_notas_debito = val[1].decode('utf-8')
                 doc.insert()
     except:
-        print "Tipos de Notas de Debito ya migrado"
+        print("Tipos de Notas de Debito ya migrado")
 
     try:
         path = os.path.join(my_path, "motivo_traslado.csv")
@@ -70,7 +70,7 @@ def after_install():
                 doc.nombre_motivo_traslado = val[1].decode('utf-8')
                 doc.insert()
     except:
-        print "Motivos de Traslado ya migrado"
+        print("Motivos de Traslado ya migrado")
 
     try:
         path = os.path.join(my_path, "tipos_transporte.csv")
@@ -86,4 +86,4 @@ def after_install():
                 doc.nombre_tipo_transporte = val[1].decode('utf-8')
                 doc.insert()
     except:
-        print "Tipos de Transporte ya migrado"
+        print("Tipos de Transporte ya migrado")
