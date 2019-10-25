@@ -86,10 +86,10 @@ def get_tipo_producto(item_name):
         tipo_producto = "NIU"
     return tipo_producto
 
-def get_serie_online(doc_serie):
+def get_serie_online(company, doc_serie):
     online_serie =[]
     online = False
-    configuracion = frappe.get_doc("Configuracion", "Configuracion")
+    configuracion = frappe.get_doc("Configuracion Nubefact", company)
     #recorre todos los tipos de comprobante y almacena las series online en un diccionario
     series = configuracion.serie_factura
     for serie in series:
