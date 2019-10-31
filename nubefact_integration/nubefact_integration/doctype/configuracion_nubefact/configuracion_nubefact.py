@@ -32,13 +32,13 @@ class ConfiguracionNubefact(NamingSeries):
 
 @frappe.whitelist()
 def get_product_anticipo(company):
-    configuracion = frappe.get_doc("Configuracion", company)
+    configuracion = frappe.get_doc("Configuracion Nubefact", company)
     return configuracion.anticipo
 
 @frappe.whitelist()
 def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_documento="", codigo_comprobante=""):
     doc_series = []
-    configuracion = frappe.get_doc("Configuracion", company)
+    configuracion = frappe.get_doc("Configuracion Nubefact", company)
     if doctype == "Sales Invoice":
         if is_return == "1":
             comprobante = frappe.get_doc("Tipos de Comprobante", "Nota de Crédito")
@@ -151,7 +151,7 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                         if serie.comprobante == "Boleta":
                             doc_series.append(serie.serie_nota_debito)
         else:
-            series = NamingSeries("Configuracion")
+            series = NamingSeries("Configuracion Nubefact")
             doc_series = series.get_options("Purchase Invoice")
             doc_series.replace("\n\n", "\n")
             doc_series = doc_series.split("\n")

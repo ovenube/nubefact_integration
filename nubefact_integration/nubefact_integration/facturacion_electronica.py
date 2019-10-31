@@ -96,8 +96,8 @@ def send_document(company, invoice, doctype):
                     mult = 1
                     doc = frappe.get_doc("Sales Invoice", invoice)
                     party_name = doc.customer_name
-                    igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
-                    ibp, monto_ibp, ibp_inc = get_impuesto_bolsas_plasticas(invoice, doctype)
+                    igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
+                    ibp, monto_ibp, ibp_inc = get_impuesto_bolsas_plasticas(company, invoice, doctype)
                     if get_plastic_bags_information(doctype):
                         producto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_items"]
                         impuesto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_tax"]
@@ -107,7 +107,7 @@ def send_document(company, invoice, doctype):
                         advance = frappe.get_doc("Sales Invoice", doc.sales_invoice_advance)
                         monto_anticipo_neto = round(advance.net_total, 2)
                         anticipo_total = round(advance.grand_total)
-                        igv_anticipo, anticipo_amount, anticipo_inc = get_igv(advance.name, doctype)
+                        igv_anticipo, anticipo_amount, anticipo_inc = get_igv(company, advance.name, doctype)
                     if doc.is_return == 1:
                         tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
                         codigo_nota_credito = doc.codigo_nota_credito
@@ -116,7 +116,7 @@ def send_document(company, invoice, doctype):
                 elif doctype == "Purchase Invoice":
                     mult = 1
                     doc = frappe.get_doc("Purchase Invoice", invoice)
-                    igv, monto_impuesto, igv_inc = get_igv(invoice, doctype)
+                    igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
                     party_name = doc.supplier_name
                     if doc.supplier_address:
                         address, email = get_address_information(doc.supplier_address)

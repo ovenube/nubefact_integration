@@ -41,34 +41,36 @@ def get_address_information(party_address):
         "ubigeo": address.get('ubigeo')
     })
 
-def get_igv(name, doctype):
+def get_igv(company, name, doctype):
+    configuracion = frappe.get_doc("Configuracion Nubefact", company)
     if doctype == "Sales Invoice":
-        conf_tax = frappe.db.get_single_value("Configuracion", "igv_ventas")
+        conf_tax = configuracion.igv_ventas
         account_head = frappe.db.get_value("Sales Taxes and Charges", filters={"parent": conf_tax})
         tax = frappe.get_doc("Sales Taxes and Charges", account_head)
         doc_tax_name = frappe.db.get_value("Sales Taxes and Charges",
                                            filters={"account_head": tax.account_head, "parent": name})
         doc_tax = frappe.get_doc("Sales Taxes and Charges", doc_tax_name)
     elif doctype == "Purchase Invoice":
-        conf_tax = frappe.db.get_single_value("Configuracion", "igv_ventas")
-        account_head = frappe.db.get_value("Purchase Taxes and Charges", filters={"parent": conf_tax})
+        conf_tax = configuracion.igv_compras
+        account_head = frappe.edb.get_value("Purchase Taxes and Charges", filters={"parent": conf_tax})
         tax = frappe.get_doc("Purchase Taxes and Charges", account_head)
         doc_tax_name = frappe.db.get_value("Purchase Taxes and Charges",
                                            filters={"account_head": tax.account_head, "parent": name})
         doc_tax = frappe.get_doc("Purchase Taxes and Charges", doc_tax_name)
     return doc_tax.rate, doc_tax.tax_amount, doc_tax.included_in_print_rate
 
-def get_impuesto_bolsas_plasticas(name, doctype):
+def get_impuesto_bolsas_plasticas(company, name, doctype):
     if frappe.get_single("Accounts Settings").allow_plastic_bags_tax:
+        configuracion = frappe.get_doc("Configuracion Nubefact", company)
         if doctype == "Sales Invoice":
-            conf_tax = frappe.db.get_single_value("Configuracion", "impuesto_bolsas_plasticas_ventas")
+            conf_tax = configuracion.igv_ventas
             account_head = frappe.db.get_value("Sales Taxes and Charges", filters={"parent": conf_tax})
             tax = frappe.get_doc("Sales Taxes and Charges", account_head)
             doc_tax_name = frappe.db.get_value("Sales Taxes and Charges",
                                             filters={"account_head": tax.account_head, "parent": name})
             doc_tax = frappe.get_doc("Sales Taxes and Charges", doc_tax_name)
         elif doctype == "Purchase Invoice":
-            conf_tax = frappe.db.get_single_value("Configuracion", "impuesto_bolsas_plasticas_ventas")
+            conf_tax = configuracion.igv_compras
             account_head = frappe.db.get_value("Purchase Taxes and Charges", filters={"parent": conf_tax})
             tax = frappe.get_doc("Purchase Taxes and Charges", account_head)
             doc_tax_name = frappe.db.get_value("Purchase Taxes and Charges",
