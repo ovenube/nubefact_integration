@@ -19,12 +19,12 @@ def daily():
             status = consult_cancel_document(inv.company, inv.name, "Sales Invoice")
             if status["aceptada_por_sunat"]:
                 frappe.db.sql(
-                    """UPDATE `tabSales Invoice` SET estado_anulacion='Aceptado' WHERE name='{0}'""".format(inv.name))
+                    """UPDATE `tabSales Invoice` SET estado_anulacion='Aceptado' WHERE name='{0}' and company='{1}'""".format(inv.name, inv.company))
                 frappe.db.commit()
                 inv.cancel()
             else:
                 frappe.db.sql(
-                    """UPDATE `tabSales Invoice` SET estado_anulacion='Rechazado' WHERE name='{0}'""".format(inv.name))
+                    """UPDATE `tabSales Invoice` SET estado_anulacion='Rechazado' WHERE name='{0}' and company='{1}'""".format(inv.name, inv.company))
                 frappe.db.commit()
     for purchases in canceled_purchases:
         inv = frappe.get_doc("Purchase Invoice", purchases['name'])
@@ -32,14 +32,14 @@ def daily():
             status = consult_cancel_document(inv.company, inv.name, "Purchase Invoice")
             if status["aceptada_por_sunat"]:
                 frappe.db.sql(
-                    """UPDATE `tabPurchases Invoice` SET estado_anulacion='Aceptado' WHERE name='{0}'""".format(
-                        inv.name))
+                    """UPDATE `tabPurchases Invoice` SET estado_anulacion='Aceptado' WHERE name='{0}' and company='{1}'""".format(
+                        inv.name, inv.company))
                 frappe.db.commit()
                 inv.cancel()
             else:
                 frappe.db.sql(
-                    """UPDATE `tabPurchases Invoice` SET estado_anulacion='Rechazado' WHERE name='{0}'""".format(
-                        inv.name))
+                    """UPDATE `tabPurchases Invoice` SET estado_anulacion='Rechazado' WHERE name='{0}' and company='{1}'""".format(
+                        inv.name, inv.company))
                 frappe.db.commit()
     for fees in canceled_fees:
         fee = frappe.get_doc("Fees", fees['name'])
@@ -47,14 +47,14 @@ def daily():
             status = consult_cancel_document(inv.company, fee.name, "Fees")
             if status["aceptada_por_sunat"]:
                 frappe.db.sql(
-                    """UPDATE `tabFees` SET estado_anulacion='Aceptado' WHERE name='{0}'""".format(
-                        fee.name))
+                    """UPDATE `tabFees` SET estado_anulacion='Aceptado' WHERE name='{0}' and company='{1}'""".format(
+                        fee.name, fee.company))
                 frappe.db.commit()
                 fee.cancel()
             else:
                 frappe.db.sql(
-                    """UPDATE `tabFees` SET estado_anulacion='Rechazado' WHERE name='{0}'""".format(
-                        fee.name))
+                    """UPDATE `tabFees` SET estado_anulacion='Rechazado' WHERE name='{0}' and company='{1}'""".format(
+                        fee.name, fee.company))
                 frappe.db.commit()
     for delivery_notes in canceled_delivery_notes:
         delivery_note = frappe.get_doc("Delivery Note", delivery_notes['name'])
@@ -62,12 +62,12 @@ def daily():
             status = consult_cancel_document(inv.company, delivery_note.name, "Fees")
             if status["aceptada_por_sunat"]:
                 frappe.db.sql(
-                    """UPDATE `tabDelivery Note` SET estado_anulacion='Aceptado' WHERE name='{0}'""".format(
-                        delivery_note.name))
+                    """UPDATE `tabDelivery Note` SET estado_anulacion='Aceptado' WHERE name='{0}' and company='{1}'""".format(
+                        delivery_note.name, delivery_note.company))
                 frappe.db.commit()
                 delivery_note.cancel()
             else:
                 frappe.db.sql(
-                    """UPDATE `tabDelivery Note` SET estado_anulacion='Rechazado' WHERE name='{0}'""".format(
-                        delivery_note.name))
+                    """UPDATE `tabDelivery Note` SET estado_anulacion='Rechazado' WHERE name='{0}' and company='{1}'""".format(
+                        delivery_note.name, delivery_note.company))
                 frappe.db.commit()

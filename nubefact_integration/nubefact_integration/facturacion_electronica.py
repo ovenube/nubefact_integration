@@ -331,8 +331,8 @@ def cancel_document(company, invoice, doctype, motivo):
         url = get_url(company)
         headers = get_autentication(company)
         if url != "" and headers != "":
-            data = consult_document(invoice, doctype)
-            if data["key"] != "":
+            data = consult_document(company, invoice, doctype)
+            if data.get("aceptada_por_sunat"):
                 content = {
                     "operacion": "generar_anulacion",
                     "tipo_de_comprobante": data["tipo_de_comprobante"],
@@ -344,23 +344,23 @@ def cancel_document(company, invoice, doctype, motivo):
                 response = requests.post(url, headers=headers, data=json.dumps(content))
                 if doctype == "Sales Invoice":
                     frappe.db.sql(
-                        """UPDATE `tabSales Invoice` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}'""".format(
-                            datetime.datetime.now(), invoice))
+                        """UPDATE `tabSales Invoice` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}' and company='{2}'""".format(
+                            datetime.datetime.now(), invoice, company))
                     frappe.db.commit()
                 elif doctype == "Purchase Invoice":
                     frappe.db.sql(
-                        """UPDATE `tabPurchase Invoice` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}'""".format(
-                            datetime.datetime.now(), invoice))
+                        """UPDATE `tabPurchase Invoice` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}' and company='{2}'""".format(
+                            datetime.datetime.now(), invoice, company))
                     frappe.db.commit()
                 elif doctype == 'Fees':
                     frappe.db.sql(
-                        """UPDATE `tabFees` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}'""".format(
-                            datetime.datetime.now(), invoice))
+                        """UPDATE `tabFees` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}' and company='{2}'""".format(
+                            datetime.datetime.now(), invoice, company))
                     frappe.db.commit()
                 elif doctype == 'Delivery Note':
                     frappe.db.sql(
-                        """UPDATE `tabDelivery Note` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}'""".format(
-                            datetime.datetime.now(), invoice))
+                        """UPDATE `tabDelivery Note` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}' and company='{2}'""".format(
+                            datetime.datetime.now(), invoice, company))
                     frappe.db.commit()
                 return json.loads(response.content)
         else:
@@ -377,7 +377,7 @@ def consult_cancel_document(company, donctype, invoice, doctype):
         headers = get_autentication(company)
         if url != "" and headers != "":
             data = consult_document(company, invoice, doctype)
-            if data["key"] != "":
+            if data.get("aceptada_por_sunat"):
                 content = {
                     "operacion": "consultar_anulacion",
                     "tipo_de_comprobante": data["tipo_de_comprobante"],
