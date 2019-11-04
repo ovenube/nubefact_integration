@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion_nubefact.autenticacion_nubefact import get_autentication, get_url
-from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information, get_impuesto_bolsas_plasticas
+from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information, get_impuesto_bolsas_plasticas, generate_fee_numero_comprobante
 from erpnext.controllers.taxes_and_totals import get_plastic_bags_information
 import requests
 import json
@@ -11,7 +11,18 @@ import datetime
 
 @frappe.whitelist()
 def send_document(company, invoice, doctype):
-    tipo, serie, correlativo = get_serie_correlativo(invoice)
+    if doctype == "Fees":
+        serie_nota_credito = frappe.get_value("Fees", invoice, "serie_nota_credito")
+        if serie_nota_credito:
+            numero_nota_credito = generate_fee_numero_comprobante(serie_nota_credito)
+            tipo, serie, correlativo = get_serie_correlativo(numero_nota_credito)
+            numero_comprobante = frappe.get_value("Fees", invoice, "numero_comprobante")
+        else:
+            serie_comprobante = frappe.get_value("Fees", invoice, "serie_comprobante")
+            numero_comprobante = generate_fee_numero_comprobante(serie_comprobante)
+            tipo, serie, correlativo = get_serie_correlativo(numero_comprobante)            
+    else:
+        tipo, serie, correlativo = get_serie_correlativo(invoice)
     online = get_serie_online(company, tipo + "-" + serie)
     if online:
         url = get_url(company)
@@ -20,8 +31,11 @@ def send_document(company, invoice, doctype):
             return_type = return_serie = return_correlativo = codigo_nota_credito = codigo_nota_debito = party_name = ""
             address = {}
             if doctype == 'Fees':
-                mult = 1
                 doc = frappe.get_doc("Fees", invoice)
+                if doc.is_return == 1:
+                    tipo, return_serie, return_correlativo = get_serie_correlativo(numero_comprobante)
+                    codigo_nota_credito = doc.codigo_nota_credito
+                    return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
                 content = {
                     "operacion": "generar_comprobante",
                     "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
@@ -39,17 +53,17 @@ def send_document(company, invoice, doctype):
                     "fecha_de_vencimiento": doc.get_formatted("due_date"),
                     "moneda": str(get_moneda(doc.currency)),
                     "tipo_de_cambio": "",
-                    "porcentaje_de_igv": str(18.00 * mult),
+                    "porcentaje_de_igv": str(18.00),
                     "descuento_global": "",
                     "total_descuento": "",
                     "total_anticipo": "",
                     "total_gravada": "",
-                    "total_inafecta": str(round(doc.grand_total, 2) * mult),
+                    "total_inafecta": str(round(doc.grand_total, 2)),
                     "total_exonerada": "",
                     "total_igv": "",
                     "total_gratuita": "",
                     "total_otros_cargos": "",
-                    "total": str(round(doc.grand_total, 2) * mult),
+                    "total": str(round(doc.grand_total, 2)),
                     "percepcion_tipo": "",
                     "percepcion_base_imponible": "",
                     "total_percepcion": "",
@@ -81,10 +95,10 @@ def send_document(company, invoice, doctype):
                         "valor_unitario": str(round(item.amount, 2)),
                         "precio_unitario": str(round(item.amount, 2)),
                         "descuento": "",
-                        "subtotal": str(round(item.amount, 2) * mult),
+                        "subtotal": str(round(item.amount, 2)),
                         "tipo_de_igv": "9",
                         "igv": "0",
-                        "total": str(round(item.amount, 2) * mult),
+                        "total": str(round(item.amount, 2)),
                         "anticipo_regularizacion": "false",
                         "anticipo_documento_serie": "",
                         "anticipo_documento_numero": ""
@@ -93,7 +107,6 @@ def send_document(company, invoice, doctype):
                 if doctype == "Sales Invoice":
                     monto_anticipo_neto = igv_anticipo = anticipo_amount = anticipo_total = 0
                     producto_bolsas_plasticas = []
-                    mult = 1
                     doc = frappe.get_doc("Sales Invoice", invoice)
                     party_name = doc.customer_name
                     igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
@@ -111,10 +124,8 @@ def send_document(company, invoice, doctype):
                     if doc.is_return == 1:
                         tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
                         codigo_nota_credito = doc.codigo_nota_credito
-                        mult = -1
                         return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
                 elif doctype == "Purchase Invoice":
-                    mult = 1
                     doc = frappe.get_doc("Purchase Invoice", invoice)
                     igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
                     party_name = doc.supplier_name
@@ -125,7 +136,6 @@ def send_document(company, invoice, doctype):
                         codigo_nota_debito = doc.codigo_nota_debito
                         return_serie = doc.bill_series
                         return_correlativo = doc.bill_no
-                        mult = -1
                 content = {
                         "operacion": "generar_comprobante",
                         "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
@@ -143,17 +153,17 @@ def send_document(company, invoice, doctype):
                         "fecha_de_vencimiento": doc.get_formatted("due_date"),
                         "moneda": str(get_moneda(doc.currency)),
                         "tipo_de_cambio": str(doc.conversion_rate),
-                        "porcentaje_de_igv": str((igv - igv_anticipo) * mult),
+                        "porcentaje_de_igv": str((igv - igv_anticipo)),
                         "descuento_global": "",
                         "total_descuento": "",
                         "total_anticipo": monto_anticipo_neto if not monto_anticipo_neto==0 else "",
-                        "total_gravada": str(round(doc.net_total - monto_anticipo_neto, 2) * mult),
+                        "total_gravada": str(round(doc.net_total - monto_anticipo_neto, 2)),
                         "total_inafecta": "",
                         "total_exonerada": "",
-                        "total_igv": str(round(monto_impuesto - anticipo_amount, 2) * mult),
+                        "total_igv": str(round(monto_impuesto - anticipo_amount, 2)),
                         "total_gratuita": "",
                         "total_otros_cargos": "",
-                        "total": str(round(doc.grand_total - anticipo_total, 2) * mult),
+                        "total": str(round(doc.grand_total - anticipo_total, 2)),
                         "percepcion_tipo": "",
                         "percepcion_base_imponible": "",
                         "total_percepcion": "",
@@ -174,7 +184,7 @@ def send_document(company, invoice, doctype):
                         "orden_compra_servicio": "",
                         "tabla_personalizada_codigo": "",
                         "formato_de_pdf": "",
-                        "total_impuestos_bolsas": str(round(monto_ibp, 2) * mult) if monto_ibp != 0 else ""
+                        "total_impuestos_bolsas": str(round(monto_ibp, 2)) if monto_ibp != 0 else ""
                 }
                 content['items'] = []
                 if doc.sales_invoice_advance is not None:
@@ -186,12 +196,12 @@ def send_document(company, invoice, doctype):
                             "descripcion": "REGULARIZACIÓN DEL ANTICIPO",
                             "cantidad": "1",
                             "valor_unitario": str(round(doc.net_total, 2)),
-                            "precio_unitario": str(round(doc.grand_total, 2) * mult),
+                            "precio_unitario": str(round(doc.grand_total, 2)),
                             "descuento": "",
                             "subtotal": str(round(doc.net_total, 2)),
                             "tipo_de_igv": "1",
                             "igv": str(round(monto_impuesto, 2)),
-                            "total": str(round(doc.grand_total, 2) * mult),
+                            "total": str(round(doc.grand_total, 2)),
                             "anticipo_regularizacion": "false",
                             "anticipo_documento_serie": "",
                             "anticipo_documento_numero": ""
@@ -219,14 +229,14 @@ def send_document(company, invoice, doctype):
                             "unidad_de_medida": tipo_producto,
                             "codigo": item.item_code,
                             "descripcion": item.item_name,
-                            "cantidad": str(item.qty * mult),
+                            "cantidad": str(item.qty),
                             "valor_unitario": str(round(item.net_rate, 2)),
                             "precio_unitario": str(round(item.rate, 2)) if igv_inc == 1 else str(round(item.net_rate, 2) * 1.18),
                             "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
-                            "subtotal": str(round(item.net_amount, 2) * mult),
+                            "subtotal": str(round(item.net_amount, 2)),
                             "tipo_de_igv": "1",
-                            "igv": str(round(item.net_amount * igv / 100, 2) * mult),
-                            "total": str(round(item.amount, 2) * mult) if igv_inc == 1 else str(round(item.net_amount, 2) * mult * 1.18),
+                            "igv": str(round(item.net_amount * igv / 100, 2)),
+                            "total": str(round(item.amount, 2)) if igv_inc == 1 else str(round(item.net_amount, 2) * 1.18),
                             "anticipo_regularizacion": "false",
                             "anticipo_documento_serie": "",
                             "anticipo_documento_numero": "",
@@ -288,7 +298,12 @@ def send_document(company, invoice, doctype):
                         "cantidad": str(item.qty)
                 })
             response = requests.post(url, headers=headers, data=json.dumps(content))
-            return json.loads(response.content)
+            data = json.loads(response.content)
+            if doctype == "Fees":
+                data["numero_comprobante"] = numero_comprobante
+                if serie_nota_credito:
+                    data["numero_nota_credito"] = numero_nota_credito
+            return data
         else:
             return ""
     else:
@@ -296,7 +311,18 @@ def send_document(company, invoice, doctype):
 
 @frappe.whitelist()
 def consult_document(company, invoice, doctype):
-    tipo, serie, correlativo = get_serie_correlativo(invoice)
+    if doctype == "Fees":
+        serie_nota_credito = frappe.get_value("Fees", invoice, "serie_nota_credito")
+        if serie_nota_credito:
+            numero_nota_credito = generate_fee_numero_comprobante(serie_nota_credito)
+            tipo, serie, correlativo = get_serie_correlativo(numero_nota_credito)
+            numero_comprobante = frappe.get_value("Fees", invoice, "numero_comprobante")
+        else:
+            serie_comprobante = frappe.get_value("Fees", invoice, "serie_comprobante")
+            numero_comprobante = generate_fee_numero_comprobante(serie_comprobante)
+            tipo, serie, correlativo = get_serie_correlativo(numero_comprobante)            
+    else:
+        tipo, serie, correlativo = get_serie_correlativo(invoice)
     online = get_serie_online(company, tipo + "-" + serie)
     if online:
         url = get_url(company)
@@ -325,7 +351,18 @@ def consult_document(company, invoice, doctype):
 
 @frappe.whitelist()
 def cancel_document(company, invoice, doctype, motivo):
-    tipo, serie, correlativo = get_serie_correlativo(invoice)
+    if doctype == "Fees":
+        serie_nota_credito = frappe.get_value("Fees", invoice, "serie_nota_credito")
+        if serie_nota_credito:
+            numero_nota_credito = generate_fee_numero_comprobante(serie_nota_credito)
+            tipo, serie, correlativo = get_serie_correlativo(numero_nota_credito)
+            numero_comprobante = frappe.get_value("Fees", invoice, "numero_comprobante")
+        else:
+            serie_comprobante = frappe.get_value("Fees", invoice, "serie_comprobante")
+            numero_comprobante = generate_fee_numero_comprobante(serie_comprobante)
+            tipo, serie, correlativo = get_serie_correlativo(numero_comprobante)            
+    else:
+        tipo, serie, correlativo = get_serie_correlativo(invoice)
     online = get_serie_online(company, tipo + "-" + serie)
     if online:
         url = get_url(company)
@@ -370,8 +407,18 @@ def cancel_document(company, invoice, doctype, motivo):
 
 @frappe.whitelist()
 def consult_cancel_document(company, donctype, invoice, doctype):
-    tipo, serie, correlativo = get_serie_correlativo(invoice)
-    online = get_serie_online(company, tipo + "-" + serie)
+    if doctype == "Fees":
+        serie_nota_credito = frappe.get_value("Fees", invoice, "serie_nota_credito")
+        if serie_nota_credito:
+            numero_nota_credito = generate_fee_numero_comprobante(serie_nota_credito)
+            tipo, serie, correlativo = get_serie_correlativo(numero_nota_credito)
+            numero_comprobante = frappe.get_value("Fees", invoice, "numero_comprobante")
+        else:
+            serie_comprobante = frappe.get_value("Fees", invoice, "serie_comprobante")
+            numero_comprobante = generate_fee_numero_comprobante(serie_comprobante)
+            tipo, serie, correlativo = get_serie_correlativo(numero_comprobante)            
+    else:
+        tipo, serie, correlativo = get_serie_correlativo(invoice)
     if online:
         url = get_url(company)
         headers = get_autentication(company)

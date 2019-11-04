@@ -2,6 +2,19 @@
 
 from __future__ import unicode_literals
 import frappe
+from frappe.model.naming import make_autoname, revert_series_if_last
+
+@frappe.whitelist()
+def generate_fee_numero_comprobante(serie_comprobante):
+    numero_comprobante = make_autoname(key=serie_comprobante)
+    return numero_comprobante
+
+@frappe.whitelist()
+def revert_fee_numero_comprobante(serie_comprobante, numero_comprobante, serie_nota_credito="", numero_nota_credito=""):
+    if serie_nota_credito != "":
+        revert_series_if_last(serie_nota_credito, numero_nota_credito)
+    else:
+        revert_series_if_last(serie_comprobante, numero_comprobante)
 
 def tipo_de_comprobante(codigo):
     if codigo == "01":
