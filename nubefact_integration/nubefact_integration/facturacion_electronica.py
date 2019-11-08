@@ -36,6 +36,9 @@ def send_document(company, invoice, doctype):
                     tipo, return_serie, return_correlativo = get_serie_correlativo(numero_comprobante)
                     codigo_nota_credito = doc.codigo_nota_credito
                     return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
+                if doc.factura_de_venta == 1:
+                        address = get_address_information(doc.direccion)
+                        customer = frappe.get_doc("Customer", doc.razon_social)
                 content = {
                     "operacion": "generar_comprobante",
                     "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
@@ -44,8 +47,8 @@ def send_document(company, invoice, doctype):
                     "sunat_transaction": doc.codigo_transaccion_sunat,
                     "cliente_tipo_de_documento": doc.codigo_tipo_documento,
                     "cliente_numero_de_documento": doc.tax_id,
-                    "cliente_denominacion": doc.razon_social if doc.factura_de_venta else doc.student_name,
-                    "cliente_direccion": doc.direccion if doc.direccion else "",
+                    "cliente_denominacion": customer.customer_name if doc.factura_de_venta else doc.student_name,
+                    "cliente_direccion": address.address if address.get('address') else "",
                     "cliente_email": doc.student_email if doc.student_email else "",
                     "cliente_email_1": "",
                     "cliente_email_2": "",
