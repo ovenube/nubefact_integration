@@ -19,9 +19,9 @@ frappe.ui.form.on('Configuracion Nubefact', {
 				frm.refresh_field("serie_nota_credito");
 				frappe.meta.get_docfield("Detalle Serie Nota de Credito Electronica Contingencia","serie_nota_credito_contingencia", frm.doc.name).options = r.message["venta"];
 				frm.refresh_field("serie_nota_credito_contingencia");
-				frappe.meta.get_docfield("Detalle Serie Nota de Debito Electronica","serie_nota_debito", frm.doc.name).options = r.message["compra"];
+				frappe.meta.get_docfield("Detalle Serie Nota de Debito Electronica","serie_nota_debito", frm.doc.name).options = r.message["venta"];
 				frm.refresh_field("serie_nota_debito");
-				frappe.meta.get_docfield("Detalle Serie Nota de Debito Electronica Contingencia","serie_nota_debito_contingencia", frm.doc.name).options = r.message["compra"];
+				frappe.meta.get_docfield("Detalle Serie Nota de Debito Electronica Contingencia","serie_nota_debito_contingencia", frm.doc.name).options = r.message["venta"];
 				frm.refresh_field("serie_nota_debito_contingencia");
 				frappe.meta.get_docfield("Detalle Serie Guia de Remision Electronica","serie_guia_remision", frm.doc.name).options = r.message["guia"];
 				frm.refresh_field("serie_guia_remision");

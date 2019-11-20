@@ -128,17 +128,16 @@ def send_document(company, invoice, doctype):
                         tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
                         codigo_nota_credito = doc.codigo_nota_credito
                         return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
+                    elif doc.es_nota_debito == 1:
+                        return_type = "1" if doc.codigo_comprobante_proveedor == "1" else "2"
+                        codigo_nota_debito = doc.codigo_nota_debito
+                        tipo, return_serie, return_correlativo = get_serie_correlativo(doc.nota_de_debito_contra_factura_de_venta)
                 elif doctype == "Purchase Invoice":
                     doc = frappe.get_doc("Purchase Invoice", invoice)
                     igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
                     party_name = doc.supplier_name
                     if doc.supplier_address:
                         address, email = get_address_information(doc.supplier_address)
-                    if doc.is_return == 1:
-                        return_type = "1" if doc.codigo_comprobante_proveedor == "1" else "2"
-                        codigo_nota_debito = doc.codigo_nota_debito
-                        return_serie = doc.bill_series
-                        return_correlativo = doc.bill_no
                 content = {
                         "operacion": "generar_comprobante",
                         "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
@@ -164,7 +163,7 @@ def send_document(company, invoice, doctype):
                         "total_inafecta": "",
                         "total_exonerada": "",
                         "total_igv": str(round(monto_impuesto - anticipo_amount, 2)),
-                        "total_gratuita": "",
+                        "total_gratuita": str(doc.total_amount_free),
                         "total_otros_cargos": "",
                         "total": str(round(doc.grand_total - anticipo_total, 2)),
                         "percepcion_tipo": "",
@@ -233,11 +232,11 @@ def send_document(company, invoice, doctype):
                             "codigo": item.item_code,
                             "descripcion": item.item_name,
                             "cantidad": str(item.qty),
-                            "valor_unitario": str(round(item.net_rate, 2)),
-                            "precio_unitario": str(round(item.rate, 2)) if igv_inc == 1 else str(round(item.net_rate, 2) * 1.18),
+                            "valor_unitario": str(round(item.unit_value, 2)) if (doc.unit_value != 0) else str(round(item.net_rate, 2)),
+                            "precio_unitario": str(round(item.unit_value, 2)) if (doc.unit_value != 0) else str(round(item.rate, 2)) if igv_inc == 1 else str(round(item.net_rate, 2) * 1.18),
                             "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
-                            "subtotal": str(round(item.net_amount, 2)),
-                            "tipo_de_igv": "1",
+                            "subtotal": str(round(item.free_amount, 2)) if (doc.unit_value != 0) else str(round(item.net_amount, 2)),
+                            "tipo_de_igv": "6" if (doc.unit_value != 0) else "1",
                             "igv": str(round(item.net_amount * igv / 100, 2)),
                             "total": str(round(item.amount, 2)) if igv_inc == 1 else str(round(item.net_amount, 2) * 1.18),
                             "anticipo_regularizacion": "false",

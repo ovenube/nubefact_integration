@@ -36,7 +36,7 @@ def get_product_anticipo(company):
     return configuracion.anticipo
 
 @frappe.whitelist()
-def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_documento="", codigo_comprobante=""):
+def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_documento="", codigo_comprobante="", es_nota_debito=""):
     doc_series = []
     configuracion = frappe.get_doc("Configuracion Nubefact", company)
     if doctype == "Sales Invoice":
@@ -62,6 +62,28 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                     for serie in series:
                         if serie.comprobante == "Boleta":
                             doc_series.append(serie.serie_nota_credito)
+        elif es_nota_debito == "1":
+            comprobante = frappe.get_doc("Tipos de Comprobante", "Nota de Débito")
+            if contingencia == "1":
+                series = configuracion.serie_nota_debito_contingencia
+                if codigo_tipo_documento == "6":
+                    for serie in series:
+                        if serie.comprobante == "Factura":
+                            doc_series.append(serie.serie_nota_debito_contingencia)
+                else:
+                    for serie in series:
+                        if serie.comprobante == "Boleta":
+                            doc_series.append(serie.serie_nota_debito_contingencia)
+            else:
+                series = configuracion.serie_nota_debito
+                if codigo_tipo_documento == "6":
+                    for serie in series:
+                        if serie.comprobante == "Factura":
+                            doc_series.append(serie.serie_nota_debito)
+                else:
+                    for serie in series:
+                        if serie.comprobante == "Boleta":
+                            doc_series.append(serie.serie_nota_debito)
         else:
             if codigo_tipo_documento == "6":
                 comprobante = frappe.get_doc("Tipos de Comprobante", "Factura")
