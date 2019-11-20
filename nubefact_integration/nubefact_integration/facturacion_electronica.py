@@ -251,8 +251,8 @@ def send_document(company, invoice, doctype):
                 company_address = customer_address = {}
                 if doc.customer_address:
                     address = get_address_information(doc.customer_address)
-                if doc.customer_address:
-                    customer_address = get_address_information(doc.shipping_address)
+                if doc.shipping_address_name:
+                    customer_address = get_address_information(doc.shipping_address_name)
                 if doc.company_address:
                     company_address = get_address_information((doc.company_address))
                 content = {
