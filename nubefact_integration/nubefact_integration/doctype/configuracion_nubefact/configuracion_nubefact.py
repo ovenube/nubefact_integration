@@ -105,7 +105,7 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                     series = configuracion.serie_boleta
                     for serie in series:
                         doc_series.append(serie.serie_boleta)
-    if doctype == "Fees":
+    elif doctype == "Fees":
         if is_return == "1":
             comprobante = frappe.get_doc("Tipos de Comprobante", "Nota de Crédito")
             if contingencia == "1":
@@ -173,7 +173,7 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                         if serie.comprobante == "Boleta":
                             doc_series.append(serie.serie_nota_debito)
         else:
-            series = NamingSeries("Configuracion Nubefact")
+            series = NamingSeries("Naming Series")
             doc_series = series.get_options("Purchase Invoice")
             doc_series.replace("\n\n", "\n")
             doc_series = doc_series.split("\n")
