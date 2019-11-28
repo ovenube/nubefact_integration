@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion_nubefact.autenticacion_nubefact import get_autentication, get_url
+from nubefact_integration.nubefact_integration.doctype.configuracion_nubefact.configuracion_nubefact import get_cuentas_bancarias
 from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information, get_impuesto_bolsas_plasticas, generate_fee_numero_comprobante
 from erpnext.controllers.taxes_and_totals import get_plastic_bags_information
 import requests
@@ -114,6 +115,9 @@ def send_document(company, invoice, doctype):
                     party_name = doc.customer_name
                     igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
                     ibp, monto_ibp, ibp_inc = get_impuesto_bolsas_plasticas(company, invoice, doctype)
+                    cuenta_bancaria = "/ CUENTA BANCARIA Nº " + get_cuentas_bancarias(company, doc.currency) if get_cuentas_bancarias(company, doc.currency) != "" else ""
+                    instrucciones = "Instrucciones " + doc.instrucciones if doc.instrucciones else ""
+                    nota_de_entrega = " / NOTA DE ENTREGA Nº " + doc.nota_entrega_origen if doc.nota_entrega_origen else ""
                     if get_plastic_bags_information(doctype):
                         producto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_items"]
                         impuesto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_tax"]
@@ -171,7 +175,7 @@ def send_document(company, invoice, doctype):
                         "total_percepcion": "",
                         "total_incluido_percepcion": "",
                         "detraccion": "false",
-                        "observaciones": "",
+                        "observaciones": (instrucciones + nota_de_entrega + cuenta_bancaria) if doc.doctype == "Sales Invoice" else "",
                         "documento_que_se_modifica_tipo": return_type,
                         "documento_que_se_modifica_serie": return_serie,
                         "documento_que_se_modifica_numero": return_correlativo,
@@ -180,10 +184,10 @@ def send_document(company, invoice, doctype):
                         "enviar_automaticamente_a_la_sunat": "true",
                         "enviar_automaticamente_al_cliente": "false",
                         "codigo_unico": "",
-                        "condiciones_de_pago": "",
+                        "condiciones_de_pago": doc.payment_terms_template,
                         "medio_de_pago": "",
                         "placa_vehiculo": "",
-                        "orden_compra_servicio": "",
+                        "orden_compra_servicio": doc.po_no if doc.doctype == "Sales Invoice" else "",
                         "tabla_personalizada_codigo": "",
                         "formato_de_pdf": "",
                         "total_impuestos_bolsas": str(round(monto_ibp, 2)) if monto_ibp != 0 else ""
@@ -268,10 +272,10 @@ def send_document(company, invoice, doctype):
                     "cliente_email_1": "",
                     "cliente_email_2": "",
                     "fecha_de_emision": doc.get_formatted("posting_date"),
-                    "observaciones": "observaciones",
+                    "observaciones": doc.instructions + " / Pedido de compra No. " + doc.po_no + "/ N° de Inscripcion del MTC. "+ doc.vehicle_no,
                     "motivo_de_traslado": doc.codigo_motivo_traslado,
                     "peso_bruto_total": doc.total_net_weight,
-                    "numero_de_bultos": "0",
+                    "numero_de_bultos": doc.numero_bultos if doc.numero_bultos else "0",
                     "tipo_de_transporte": doc.codigo_motivo_traslado,
                     "fecha_de_inicio_de_traslado": doc.get_formatted("lr_date"),
                     "transportista_documento_tipo": doc_transportista.codigo_tipo_documento,
@@ -421,6 +425,7 @@ def consult_cancel_document(company, donctype, invoice, doctype):
             tipo, serie, correlativo = get_serie_correlativo(numero_comprobante)            
     else:
         tipo, serie, correlativo = get_serie_correlativo(invoice)
+    online = get_serie_online(company, tipo + "-" + serie)
     if online:
         url = get_url(company)
         headers = get_autentication(company)

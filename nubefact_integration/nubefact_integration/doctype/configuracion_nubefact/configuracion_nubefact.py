@@ -36,6 +36,16 @@ def get_product_anticipo(company):
     return configuracion.anticipo
 
 @frappe.whitelist()
+def get_cuentas_bancarias(company, currency):
+    configuracion = frappe.get_doc("Configuracion Nubefact", company)
+    cuenta_bancaria = ""
+    if currency == "USD":
+        cuenta_bancaria = configuracion.cuenta_bancaria_dolares
+    else:
+        cuenta_bancaria = configuracion.cuenta_bancaria_soles
+    return cuenta_bancaria if cuenta_bancaria else ""
+
+@frappe.whitelist()
 def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_documento="", codigo_comprobante="", es_nota_debito=""):
     doc_series = []
     configuracion = frappe.get_doc("Configuracion Nubefact", company)

@@ -30,8 +30,12 @@ def tipo_de_comprobante(codigo):
     return tipo_comprobante
 
 def get_serie_correlativo(name):
-    tipo, serie, correlativo = name.split("-")
-    return tipo, serie, correlativo
+    try:
+        tipo, serie, correlativo = name.split("-")
+    except:
+        return "", "", ""
+    else:
+        return tipo, serie, correlativo
 
 def get_doc_transportista(name):
     return frappe.get_doc("Supplier", name)
