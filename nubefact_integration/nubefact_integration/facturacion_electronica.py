@@ -237,19 +237,19 @@ def send_document(company, invoice, doctype):
                             tipo_producto = get_tipo_producto(item.item_code)
                             if item.unit_value > 0:
                                 tipo_igv = "6"
-                                precio_unitario = round(item.unit_value, 2)
+                                precio_unitario = round(item.unit_value, 4)
                                 total = round(item.amount, 2)
                             elif doc.total_taxes_and_charges:
                                 tipo_igv = "1"
                                 if igv_inc == 1:
-                                    precio_unitario = round(item.rate, 2)
+                                    precio_unitario = round(item.rate, 4)
                                     total = round(item.amount, 2)
                                 elif igv > 0:
-                                    precio_unitario = round(item.net_rate, 2) * 1.18
+                                    precio_unitario = round(item.net_rate, 4) * 1.18
                                     total = round(item.net_amount, 2) * 1.18
                             elif doc.codigo_transaccion_sunat == "2":
                                 tipo_igv = "16"
-                                precio_unitario = round(item.unit_value, 2)
+                                precio_unitario = round(item.unit_value, 4)
                                 total = round(item.amount, 2)
                             else:
                                 tipo_igv = "9"
@@ -258,7 +258,7 @@ def send_document(company, invoice, doctype):
                                 "codigo": item.item_code,
                                 "descripcion": item.item_name,
                                 "cantidad": str(item.qty),
-                                "valor_unitario": str(round(item.unit_value, 2)) if (item.unit_value > 0) else str(round(item.net_rate, 2)),
+                                "valor_unitario": str(round(item.unit_value, 4)) if (item.unit_value > 0) else str(round(item.net_rate, 4)),
                                 "precio_unitario": str(precio_unitario),
                                 "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
                                 "subtotal": str(round(item.free_amount, 2)) if (item.unit_value > 0) else str(round(item.net_amount, 2)),
@@ -277,7 +277,7 @@ def send_document(company, invoice, doctype):
                     company_address = customer_address = {}
                     instrucciones = "Instrucciones: " + doc.instructions if doc.instructions else ""
                     pedido_de_compra = " / Pedido de compra No. " + doc.po_no if doc.po_no else ""
-                    vehiculo_no = "/ N° de Inscripcion del MTC. "+ doc.vehicle_no if doc.vehicle_no else "" 
+                    mtc_no = "/ N° de Inscripcion del MTC. "+ doc.lr_no if doc.lr_no else "" 
                     if doc.customer_address:
                         address = get_address_information(doc.customer_address)
                     if doc.shipping_address_name:
@@ -299,7 +299,7 @@ def send_document(company, invoice, doctype):
                         "cliente_email_1": "",
                         "cliente_email_2": "",
                         "fecha_de_emision": doc.get_formatted("posting_date"),
-                        "observaciones": instrucciones + pedido_de_compra + vehiculo_no,
+                        "observaciones": instrucciones + pedido_de_compra + mtc_no,
                         "motivo_de_traslado": doc.codigo_motivo_traslado,
                         "peso_bruto_total": doc.total_net_weight,
                         "numero_de_bultos": doc.numero_bultos if doc.numero_bultos else "0",
