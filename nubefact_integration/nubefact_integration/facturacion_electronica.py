@@ -110,6 +110,7 @@ def send_document(company, invoice, doctype):
                         })
                 elif doctype == "Sales Invoice" or doctype == "Purchase Invoice":
                     if doctype == "Sales Invoice":
+                        multi  = 1
                         monto_anticipo_neto = igv_anticipo = anticipo_amount = anticipo_total = 0
                         producto_bolsas_plasticas = []
                         doc = frappe.get_doc("Sales Invoice", invoice)
@@ -121,7 +122,8 @@ def send_document(company, invoice, doctype):
                                 producto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_items"]
                                 impuesto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_tax"]
                         else:
-                            igv = monto_impuesto = igv_inc = ibp = monto_ibp = ibp_inc = 0
+                            igv = monto_impuesto = igv_inc = 0
+                            ibp = monto_ibp = ibp_inc = 0
                         cuenta_bancaria = "/ CUENTA BANCARIA Nº " + get_cuentas_bancarias(company, doc.currency) if get_cuentas_bancarias(company, doc.currency) != "" else ""
                         instrucciones = "Instrucciones: " + doc.instrucciones if doc.instrucciones else ""
                         nota_de_entrega = " / NOTA DE ENTREGA Nº " + doc.nota_entrega_origen if doc.nota_entrega_origen else ""
@@ -136,10 +138,12 @@ def send_document(company, invoice, doctype):
                             tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
                             codigo_nota_credito = doc.codigo_nota_credito
                             return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
+                            multi = -1
                         elif doc.es_nota_debito == 1:
                             return_type = "1" if doc.codigo_comprobante_proveedor == "1" else "2"
                             codigo_nota_debito = doc.codigo_nota_debito
                             tipo, return_serie, return_correlativo = get_serie_correlativo(doc.nota_de_debito_contra_factura_de_venta)
+                            multi = -1
                     elif doctype == "Purchase Invoice":
                         doc = frappe.get_doc("Purchase Invoice", invoice)
                         igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
@@ -167,13 +171,13 @@ def send_document(company, invoice, doctype):
                             "descuento_global": "",
                             "total_descuento": "",
                             "total_anticipo": monto_anticipo_neto if not monto_anticipo_neto==0 else "",
-                            "total_gravada": str(round(doc.net_total - monto_anticipo_neto, 2)) if doc.total_taxes_and_charges else "",
-                            "total_inafecta": str(round(doc.grand_total - anticipo_total, 2)) if not doc.total_taxes_and_charges else "",
+                            "total_gravada": str(round(doc.net_total - monto_anticipo_neto, 2) * multi) if doc.total_taxes_and_charges else "",
+                            "total_inafecta": str(round(doc.grand_total - anticipo_total, 2) * multi) if not doc.total_taxes_and_charges else "",
                             "total_exonerada": "",
-                            "total_igv": str(round(monto_impuesto - anticipo_amount, 2)) if doc.total_taxes_and_charges else "",
+                            "total_igv": str(round(monto_impuesto - anticipo_amount, 2) * multi) if doc.total_taxes_and_charges else "",
                             "total_gratuita": str(doc.total_amount_free),
                             "total_otros_cargos": "",
-                            "total": str(round(doc.grand_total - anticipo_total, 2)),
+                            "total": str(round(doc.grand_total - anticipo_total, 2) * multi),
                             "percepcion_tipo": "",
                             "percepcion_base_imponible": "",
                             "total_percepcion": "",
@@ -194,7 +198,7 @@ def send_document(company, invoice, doctype):
                             "orden_compra_servicio": doc.po_no if doc.doctype == "Sales Invoice" else "",
                             "tabla_personalizada_codigo": "",
                             "formato_de_pdf": "",
-                            "total_impuestos_bolsas": str(round(monto_ibp, 2)) if monto_ibp != 0 else ""
+                            "total_impuestos_bolsas": str(round(monto_ibp, 2) * multi) if monto_ibp != 0 else ""
                     }
                     content['items'] = []
                     if doc.sales_invoice_advance is not None:
@@ -237,20 +241,20 @@ def send_document(company, invoice, doctype):
                             tipo_producto = get_tipo_producto(item.item_code)
                             if item.unit_value > 0:
                                 tipo_igv = "6"
-                                precio_unitario = round(item.unit_value, 4)
-                                total = round(item.amount, 2)
+                                precio_unitario = round(item.unit_value, 4) * multi
+                                total = round(item.amount, 2) * multi
                             elif doc.total_taxes_and_charges:
                                 tipo_igv = "1"
                                 if igv_inc == 1:
-                                    precio_unitario = round(item.rate, 4)
-                                    total = round(item.amount, 2)
+                                    precio_unitario = round(item.rate, 4) * multi
+                                    total = round(item.amount, 2) * multi
                                 elif igv > 0:
-                                    precio_unitario = round(item.net_rate, 4) * 1.18
-                                    total = round(item.net_amount, 2) * 1.18
+                                    precio_unitario = round(item.net_rate, 4) * 1.18 * multi
+                                    total = round(item.net_amount, 2) * 1.18 * multi
                             elif doc.codigo_transaccion_sunat == "2":
                                 tipo_igv = "16"
-                                precio_unitario = round(item.unit_value, 4)
-                                total = round(item.amount, 2)
+                                precio_unitario = round(item.unit_value, 4) * multi
+                                total = round(item.amount, 2) * multi
                             else:
                                 tipo_igv = "9"
                             content['items'].append({
@@ -261,14 +265,14 @@ def send_document(company, invoice, doctype):
                                 "valor_unitario": str(round(item.unit_value, 4)) if (item.unit_value > 0) else str(round(item.net_rate, 4)),
                                 "precio_unitario": str(precio_unitario),
                                 "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
-                                "subtotal": str(round(item.free_amount, 2)) if (item.unit_value > 0) else str(round(item.net_amount, 2)),
+                                "subtotal": str(round(item.free_amount, 2) * multi) if (item.unit_value > 0) else str(round(item.net_amount, 2) * multi),
                                 "tipo_de_igv": tipo_igv,
-                                "igv": str(round(item.net_amount * igv / 100, 2)) if doc.total_taxes_and_charges else "0",
+                                "igv": str(round(item.net_amount * igv / 100, 2) * multi) if doc.total_taxes_and_charges else "0",
                                 "total": str(total),
                                 "anticipo_regularizacion": "false",
                                 "anticipo_documento_serie": "",
                                 "anticipo_documento_numero": "",
-                                "impuesto_bolsas": str(item.qty * impuesto_bolsas_plasticas.tax_amount) if (item.item_code in producto_bolsas_plasticas) else ""
+                                "impuesto_bolsas": str(item.qty * impuesto_bolsas_plasticas.tax_amount * multi) if (item.item_code in producto_bolsas_plasticas) else ""
                         })
                 elif doctype == "Delivery Note":
                     doc = frappe.get_doc("Delivery Note", invoice)
