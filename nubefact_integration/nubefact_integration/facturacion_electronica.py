@@ -129,7 +129,7 @@ def send_document(company, invoice, doctype):
                         nota_de_entrega = " / NOTA DE ENTREGA Nº " + doc.nota_entrega_origen if doc.nota_entrega_origen else ""
                         if doc.customer_address:
                             address = get_address_information(doc.customer_address)
-                        if doc.sales_invoice_advance is not None:
+                        if doc.codigo_transaccion_sunat == "4":
                             advance = frappe.get_doc("Sales Invoice", doc.sales_invoice_advance)
                             monto_anticipo_neto = round(advance.net_total, 2)
                             anticipo_total = round(advance.grand_total)
@@ -143,7 +143,6 @@ def send_document(company, invoice, doctype):
                             return_type = "1" if doc.codigo_comprobante_proveedor == "1" else "2"
                             codigo_nota_debito = doc.codigo_nota_debito
                             tipo, return_serie, return_correlativo = get_serie_correlativo(doc.nota_de_debito_contra_factura_de_venta)
-                            multi = -1
                     elif doctype == "Purchase Invoice":
                         doc = frappe.get_doc("Purchase Invoice", invoice)
                         igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
@@ -201,7 +200,7 @@ def send_document(company, invoice, doctype):
                             "total_impuestos_bolsas": str(round(monto_ibp, 2) * multi) if monto_ibp != 0 else ""
                     }
                     content['items'] = []
-                    if doc.sales_invoice_advance is not None:
+                    if doc.codigo_transaccion_sunat == "4":
                         advance_tipo, advance_serie, advance_correlativo = get_serie_correlativo(doc.sales_invoice_advance)
                         content['items'].append(
                             {
@@ -241,19 +240,19 @@ def send_document(company, invoice, doctype):
                             tipo_producto = get_tipo_producto(item.item_code)
                             if item.unit_value > 0:
                                 tipo_igv = "6"
-                                precio_unitario = round(item.unit_value, 4) * multi
+                                precio_unitario = round(item.unit_value, 4)
                                 total = round(item.amount, 2) * multi
                             elif doc.total_taxes_and_charges:
                                 tipo_igv = "1"
                                 if igv_inc == 1:
-                                    precio_unitario = round(item.rate, 4) * multi
+                                    precio_unitario = round(item.rate, 4)
                                     total = round(item.amount, 2) * multi
                                 elif igv > 0:
-                                    precio_unitario = round(item.net_rate, 4) * 1.18 * multi
+                                    precio_unitario = round(item.net_rate, 4) * 1.18
                                     total = round(item.net_amount, 2) * 1.18 * multi
                             elif doc.codigo_transaccion_sunat == "2":
                                 tipo_igv = "16"
-                                precio_unitario = round(item.unit_value, 4) * multi
+                                precio_unitario = round(item.unit_value, 4)
                                 total = round(item.amount, 2) * multi
                             else:
                                 tipo_igv = "9"
@@ -261,7 +260,7 @@ def send_document(company, invoice, doctype):
                                 "unidad_de_medida": tipo_producto,
                                 "codigo": item.item_code,
                                 "descripcion": item.item_name,
-                                "cantidad": str(item.qty),
+                                "cantidad": str(item.qty * multi),
                                 "valor_unitario": str(round(item.unit_value, 4)) if (item.unit_value > 0) else str(round(item.net_rate, 4)),
                                 "precio_unitario": str(precio_unitario),
                                 "descuento": str(round(item.discount_amount, 2)) if (item.discount_amount > 0) else "",
