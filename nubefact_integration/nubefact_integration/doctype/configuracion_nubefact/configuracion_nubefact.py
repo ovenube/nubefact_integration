@@ -54,7 +54,7 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
             comprobante = frappe.get_doc("Tipos de Comprobante", "Nota de Crédito")
             if contingencia == "1":
                 series = configuracion.serie_nota_credito_contingencia
-                if codigo_tipo_documento == "6":
+                if codigo_tipo_documento == "6" or codigo_tipo_documento == "0":
                     for serie in series:
                         if serie.comprobante == "Factura":
                             doc_series.append(serie.serie_nota_credito_contingencia)
@@ -64,7 +64,7 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                             doc_series.append(serie.serie_nota_credito_contingencia)
             else:
                 series = configuracion.serie_nota_credito
-                if codigo_tipo_documento == "6":
+                if codigo_tipo_documento == "6" or codigo_tipo_documento == "0":
                     for serie in series:
                         if serie.comprobante == "Factura":
                             doc_series.append(serie.serie_nota_credito)
@@ -76,7 +76,7 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
             comprobante = frappe.get_doc("Tipos de Comprobante", "Nota de Débito")
             if contingencia == "1":
                 series = configuracion.serie_nota_debito_contingencia
-                if codigo_tipo_documento == "6":
+                if codigo_tipo_documento == "6" or codigo_tipo_documento == "0":
                     for serie in series:
                         if serie.comprobante == "Factura":
                             doc_series.append(serie.serie_nota_debito_contingencia)
@@ -86,7 +86,7 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                             doc_series.append(serie.serie_nota_debito_contingencia)
             else:
                 series = configuracion.serie_nota_debito
-                if codigo_tipo_documento == "6":
+                if codigo_tipo_documento == "6" or codigo_tipo_documento == "0":
                     for serie in series:
                         if serie.comprobante == "Factura":
                             doc_series.append(serie.serie_nota_debito)
@@ -151,7 +151,7 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                         doc_series.append(serie.serie_factura)
             else:
                 comprobante = frappe.get_doc("Tipos de Comprobante", "Boleta de Venta")
-                if contingencia == "01":
+                if contingencia == "1":
                     series = configuracion.serie_boleta_contingencia
                     for serie in series:
                         doc_series.append(serie.serie_boleta_contingencia)

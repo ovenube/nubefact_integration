@@ -140,7 +140,7 @@ def send_document(company, invoice, doctype):
                             return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
                             multi = -1
                         elif doc.es_nota_debito == 1:
-                            return_type = "1" if doc.codigo_comprobante_proveedor == "1" else "2"
+                            return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
                             codigo_nota_debito = doc.codigo_nota_debito
                             tipo, return_serie, return_correlativo = get_serie_correlativo(doc.nota_de_debito_contra_factura_de_venta)
                     elif doctype == "Purchase Invoice":
