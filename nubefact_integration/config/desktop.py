@@ -6,9 +6,11 @@ def get_data():
 	return [
 		{
 			"module_name": "Nubefact Integration",
-			"color": "grey",
-			"icon": "octicon octicon-file-directory",
+			"category": "Modules",
+			"label": _("Nubefact Integration"),
+			"color": "#3498db",
+			"icon": "octicon octicon-repo",
 			"type": "module",
-			"label": _("Nubefact Integration")
+			"description": "Configuracion del modulo Nubefact para facturacion electronica"
 		}
 	]
