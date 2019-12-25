@@ -5,7 +5,7 @@ from frappe import _
 def get_data():
 	return [
         {
-            "label": _("Configuracion"),
+            "label": _("Nubefact Integration"),
             "items": [
                 {
                     "type": "doctype",
@@ -20,5 +20,35 @@ def get_data():
 					"onboard": 1,
                 }
             ]
-        }
+        },
+        {
+            "label": _("Configuracion"),
+            "items": [
+                {
+                    "type": "doctype",
+                    "name": "Motivos de Traslado",
+					"onboard": 1,
+                },
+				{
+                    "type": "doctype",
+                    "name": "Tipos de Notas de Credito",
+					"onboard": 1,
+                },
+                {
+                    "type": "doctype",
+                    "name": "Tipos de Notas de Debito",
+					"onboard": 1,
+                },
+                {
+                    "type": "doctype",
+                    "name": "Tipos de Transaccion Sunat",
+					"onboard": 1,
+                },
+                {
+                    "type": "doctype",
+                    "name": "Tipos de Transporte",
+					"onboard": 1,
+                },
+            ]
+        },
     ]
