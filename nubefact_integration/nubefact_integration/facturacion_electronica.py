@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion_nubefact.autenticacion_nubefact import get_autentication, get_url
 from nubefact_integration.nubefact_integration.doctype.configuracion_nubefact.configuracion_nubefact import get_cuentas_bancarias
-from utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information, get_impuesto_bolsas_plasticas, generate_fee_numero_comprobante
+from nubefact_integration.nubefact_integration.utils import tipo_de_comprobante, get_serie_correlativo, get_moneda, get_igv, get_tipo_producto, get_serie_online, get_doc_conductor, get_doc_transportista, get_address_information, get_impuesto_bolsas_plasticas, generate_fee_numero_comprobante
 from erpnext.controllers.taxes_and_totals import get_plastic_bags_information
 import requests
 import json
