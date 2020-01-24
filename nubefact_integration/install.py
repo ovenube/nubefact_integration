@@ -19,10 +19,10 @@ def after_install():
                 # Do something with your data
                 doc = frappe.new_doc('Tipos de Transaccion Sunat')
                 doc.codigo_tipo_transaccion = val[0]
-                doc.nombre_tipo_transaccion = val[1].decode('utf-8')
+                doc.nombre_tipo_transaccion = val[1]
                 doc.insert()
     except:
-        print("Tipo de Tipos de Transaccion Sunat ya migrado")
+        print("Tipos de Transaccion Sunat ya migrado")
 
     try:
         path = os.path.join(my_path, "tipos_notas_credito.csv")
@@ -35,7 +35,7 @@ def after_install():
                 # Do something with your data
                 doc = frappe.new_doc('Tipos de Notas de Credito')
                 doc.codigo_notas_credito = val[0]
-                doc.nombre_notas_credito = val[1].decode('utf-8')
+                doc.nombre_notas_credito = val[1]
                 doc.insert()
     except:
         print("Tipos de Notas de Credito ya migrado")
@@ -51,7 +51,7 @@ def after_install():
                 # Do something with your data
                 doc = frappe.new_doc('Tipos de Notas de Debito')
                 doc.codigo_notas_debito = val[0]
-                doc.nombre_notas_debito = val[1].decode('utf-8')
+                doc.nombre_notas_debito = val[1]
                 doc.insert()
     except:
         print("Tipos de Notas de Debito ya migrado")
@@ -67,7 +67,7 @@ def after_install():
                 # Do something with your data
                 doc = frappe.new_doc('Motivos de Traslado')
                 doc.codigo_motivo_traslado = val[0]
-                doc.nombre_motivo_traslado = val[1].decode('utf-8')
+                doc.nombre_motivo_traslado = val[1]
                 doc.insert()
     except:
         print("Motivos de Traslado ya migrado")
@@ -83,7 +83,7 @@ def after_install():
                 # Do something with your data
                 doc = frappe.new_doc('Tipos de Transporte')
                 doc.codigo_tipo_transporte = val[0]
-                doc.nombre_tipo_transporte = val[1].decode('utf-8')
+                doc.nombre_tipo_transporte = val[1]
                 doc.insert()
     except:
         print("Tipos de Transporte ya migrado")
