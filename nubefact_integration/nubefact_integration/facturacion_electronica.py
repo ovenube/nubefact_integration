@@ -108,47 +108,40 @@ def send_document(company, invoice, doctype):
                             "anticipo_documento_serie": "",
                             "anticipo_documento_numero": ""
                         })
-                elif doctype == "Sales Invoice" or doctype == "Purchase Invoice":
-                    if doctype == "Sales Invoice":
-                        multi  = 1
-                        monto_anticipo_neto = igv_anticipo = anticipo_amount = anticipo_total = 0
-                        producto_bolsas_plasticas = []
-                        doc = frappe.get_doc("Sales Invoice", invoice)
-                        party_name = doc.customer_name
-                        if doc.total_taxes_and_charges:
-                            igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
-                            ibp, monto_ibp, ibp_inc = get_impuesto_bolsas_plasticas(company, invoice, doctype)
-                            if get_plastic_bags_information(doctype):
-                                producto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_items"]
-                                impuesto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_tax"]
-                        else:
-                            igv = monto_impuesto = igv_inc = 0
-                            ibp = monto_ibp = ibp_inc = 0
-                        cuenta_bancaria = "/ CUENTA BANCARIA Nº " + get_cuentas_bancarias(company, doc.currency) if get_cuentas_bancarias(company, doc.currency) != "" else ""
-                        instrucciones = "Instrucciones: " + doc.instrucciones if doc.instrucciones else ""
-                        nota_de_entrega = " / NOTA DE ENTREGA Nº " + doc.nota_entrega_origen if doc.nota_entrega_origen else ""
-                        if doc.customer_address:
-                            address = get_address_information(doc.customer_address)
-                        if doc.codigo_transaccion_sunat == "4":
-                            advance = frappe.get_doc("Sales Invoice", doc.sales_invoice_advance)
-                            monto_anticipo_neto = round(advance.net_total, 2)
-                            anticipo_total = round(advance.grand_total)
-                            igv_anticipo, anticipo_amount, anticipo_inc = get_igv(company, advance.name, doctype)
-                        if doc.is_return == 1:
-                            tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
-                            codigo_nota_credito = doc.codigo_nota_credito
-                            return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
-                            multi = -1
-                        elif doc.es_nota_debito == 1:
-                            return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
-                            codigo_nota_debito = doc.codigo_nota_debito
-                            tipo, return_serie, return_correlativo = get_serie_correlativo(doc.nota_de_debito_contra_factura_de_venta)
-                    elif doctype == "Purchase Invoice":
-                        doc = frappe.get_doc("Purchase Invoice", invoice)
+                elif doctype == "Sales Invoice":
+                    multi  = 1
+                    monto_anticipo_neto = igv_anticipo = anticipo_amount = anticipo_total = 0
+                    producto_bolsas_plasticas = []
+                    doc = frappe.get_doc("Sales Invoice", invoice)
+                    party_name = doc.customer_name
+                    if doc.total_taxes_and_charges:
                         igv, monto_impuesto, igv_inc = get_igv(company, invoice, doctype)
-                        party_name = doc.supplier_name
-                        if doc.supplier_address:
-                            address, email = get_address_information(doc.supplier_address)
+                        ibp, monto_ibp, ibp_inc = get_impuesto_bolsas_plasticas(company, invoice, doctype)
+                        if get_plastic_bags_information(doctype):
+                            producto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_items"]
+                            impuesto_bolsas_plasticas = get_plastic_bags_information(doctype)["plastic_bags_tax"]
+                    else:
+                        igv = monto_impuesto = igv_inc = 0
+                        ibp = monto_ibp = ibp_inc = 0
+                    cuenta_bancaria = "/ CUENTA BANCARIA Nº " + get_cuentas_bancarias(company, doc.currency) if get_cuentas_bancarias(company, doc.currency) != "" else ""
+                    instrucciones = "Instrucciones: " + doc.instrucciones if doc.instrucciones else ""
+                    nota_de_entrega = " / NOTA DE ENTREGA Nº " + doc.nota_entrega_origen if doc.nota_entrega_origen else ""
+                    if doc.customer_address:
+                        address = get_address_information(doc.customer_address)
+                    if doc.codigo_transaccion_sunat == "4":
+                        advance = frappe.get_doc("Sales Invoice", doc.sales_invoice_advance)
+                        monto_anticipo_neto = round(advance.net_total, 2)
+                        anticipo_total = round(advance.grand_total)
+                        igv_anticipo, anticipo_amount, anticipo_inc = get_igv(company, advance.name, doctype)
+                    if doc.is_return == 1:
+                        tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
+                        codigo_nota_credito = doc.codigo_nota_credito
+                        return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
+                        multi = -1
+                    elif doc.es_nota_debito == 1:
+                        return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
+                        codigo_nota_debito = doc.codigo_nota_debito
+                        tipo, return_serie, return_correlativo = get_serie_correlativo(doc.nota_de_debito_contra_factura_de_venta)
                     content = {
                             "operacion": "generar_comprobante",
                             "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
@@ -369,8 +362,6 @@ def consult_document(company, invoice, doctype):
         if url != "" and headers != "":
             if doctype == "Sales Invoice":
                 doc = frappe.get_doc("Sales Invoice", invoice)
-            elif doctype == "Purchase Invoice":
-                doc = frappe.get_doc("Purchase Invoice", invoice)
             elif doctype == 'Fees':
                 doc = frappe.get_doc("Fees", invoice)
             elif doctype == "Delivery Note":
@@ -421,11 +412,6 @@ def cancel_document(company, invoice, doctype, motivo):
                 if doctype == "Sales Invoice":
                     frappe.db.sql(
                         """UPDATE `tabSales Invoice` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}' and company='{2}'""".format(
-                            datetime.datetime.now(), invoice, company))
-                    frappe.db.commit()
-                elif doctype == "Purchase Invoice":
-                    frappe.db.sql(
-                        """UPDATE `tabPurchase Invoice` SET estado_anulacion='En proceso', hora_cancelacion='{0}' WHERE name='{1}' and company='{2}'""".format(
                             datetime.datetime.now(), invoice, company))
                     frappe.db.commit()
                 elif doctype == 'Fees':

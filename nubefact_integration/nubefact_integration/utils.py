@@ -67,13 +67,6 @@ def get_igv(company, name, doctype):
         doc_tax_name = frappe.db.get_value("Sales Taxes and Charges",
                                            filters={"account_head": tax.account_head, "parent": name})
         doc_tax = frappe.get_doc("Sales Taxes and Charges", doc_tax_name)
-    elif doctype == "Purchase Invoice":
-        conf_tax = configuracion.igv_compras
-        account_head = frappe.edb.get_value("Purchase Taxes and Charges", filters={"parent": conf_tax})
-        tax = frappe.get_doc("Purchase Taxes and Charges", account_head)
-        doc_tax_name = frappe.db.get_value("Purchase Taxes and Charges",
-                                           filters={"account_head": tax.account_head, "parent": name})
-        doc_tax = frappe.get_doc("Purchase Taxes and Charges", doc_tax_name)
     return doc_tax.rate, doc_tax.tax_amount, doc_tax.included_in_print_rate
 
 def get_impuesto_bolsas_plasticas(company, name, doctype):
@@ -86,16 +79,6 @@ def get_impuesto_bolsas_plasticas(company, name, doctype):
                                             filters={"account_head": tax.account_head, "parent": name})
             if doc_tax_name:
                 doc_tax = frappe.get_doc("Sales Taxes and Charges", doc_tax_name)
-            else:
-                return 0, 0, 0
-        elif doctype == "Purchase Invoice":
-            conf_tax = frappe.get_single("Accounts Settings").plastic_bags_tax_purchase
-            account_head = frappe.db.get_value("Purchase Taxes and Charges", filters={"parent": conf_tax})
-            tax = frappe.get_doc("Purchase Taxes and Charges", account_head)
-            doc_tax_name = frappe.db.get_value("Purchase Taxes and Charges",
-                                            filters={"account_head": tax.account_head, "parent": name})
-            if doc_tax_name:
-                doc_tax = frappe.get_doc("Purchase Taxes and Charges", doc_tax_name)
             else:
                 return 0, 0, 0
         return doc_tax.rate, doc_tax.tax_amount, doc_tax.included_in_print_rate
