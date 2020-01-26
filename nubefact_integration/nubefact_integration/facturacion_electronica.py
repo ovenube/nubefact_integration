@@ -431,7 +431,7 @@ def cancel_document(company, invoice, doctype, motivo):
         return ""
 
 @frappe.whitelist()
-def consult_cancel_document(company, donctype, invoice, doctype):
+def consult_cancel_document(company, invoice, doctype):
     if doctype == "Fees":
         serie_nota_credito = frappe.get_value("Fees", invoice, "serie_nota_credito")
         if serie_nota_credito:
