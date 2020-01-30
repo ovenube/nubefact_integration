@@ -54,7 +54,7 @@ def send_document(company, invoice, doctype):
                         "cliente_email": doc.student_email if doc.student_email else "",
                         "cliente_email_1": "",
                         "cliente_email_2": "",
-                        "fecha_de_emision": doc.get_formatted("posting_date"),
+                        "fecha_de_emision": doc.get_formatted("fecha_comprobante"),
                         "fecha_de_vencimiento": doc.get_formatted("due_date"),
                         "moneda": str(get_moneda(doc.currency)),
                         "tipo_de_cambio": "",
