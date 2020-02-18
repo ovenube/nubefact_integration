@@ -234,7 +234,7 @@ def send_document(company, invoice, doctype):
                             if item.unit_value > 0:
                                 tipo_igv = "6"
                                 precio_unitario = round(item.unit_value, 4)
-                                total = round(item.amount, 2) * multi
+                                total = round(item.free_amount, 2) * multi
                             elif doc.total_taxes_and_charges:
                                 tipo_igv = "1"
                                 if igv_inc == 1:
