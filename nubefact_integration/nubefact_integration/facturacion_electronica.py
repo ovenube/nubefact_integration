@@ -42,7 +42,7 @@ def send_document(company, invoice, doctype):
                             address = get_address_information(doc.direccion)
                             customer = frappe.get_doc("Customer", doc.razon_social)
                     electronic_invoice = get_electronic_invoice(company, str(tipo_de_comprobante(doc.codigo_comprobante)), numero_comprobante)
-                    if electronic_invoice.get('codigo_hash') != "":
+                    if electronic_invoice.get('codigo_hash'):
                         return electronic_invoice
                     else:
                         content = {
@@ -357,8 +357,9 @@ def get_electronic_invoice(company, tipo_de_comprobante, numero_comprobante):
             "numero": correlativo
         }
     response = requests.post(url, headers=headers, data=json.dumps(content))
-    response.content['numero_comprobante'] = numero_comprobante
-    return json.loads(response.content)
+    data = json.loads(response.content)
+    data['numero_comprobante'] = numero_comprobante
+    return data
 
 @frappe.whitelist()
 def consult_document(company, invoice, doctype):
