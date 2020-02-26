@@ -357,6 +357,7 @@ def get_electronic_invoice(company, tipo_de_comprobante, numero_comprobante):
             "numero": correlativo
         }
     response = requests.post(url, headers=headers, data=json.dumps(content))
+    response.content['numero_comprobante'] = numero_comprobante
     return json.loads(response.content)
 
 @frappe.whitelist()
