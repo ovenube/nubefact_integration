@@ -41,73 +41,77 @@ def send_document(company, invoice, doctype):
                     if doc.factura_de_venta == 1:
                             address = get_address_information(doc.direccion)
                             customer = frappe.get_doc("Customer", doc.razon_social)
-                    content = {
-                        "operacion": "generar_comprobante",
-                        "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
-                        "serie": serie,
-                        "numero": correlativo,
-                        "sunat_transaction": doc.codigo_transaccion_sunat,
-                        "cliente_tipo_de_documento": doc.codigo_tipo_documento,
-                        "cliente_numero_de_documento": doc.tax_id,
-                        "cliente_denominacion": customer.customer_name if doc.factura_de_venta else doc.student_name,
-                        "cliente_direccion": address.address if address.get('address') else "",
-                        "cliente_email": doc.student_email if doc.student_email else "",
-                        "cliente_email_1": "",
-                        "cliente_email_2": "",
-                        "fecha_de_emision": datetime.datetime.now().strftime("%d-%m-%Y"),
-                        "fecha_de_vencimiento": datetime.datetime.now().strftime("%d-%m-%Y"),
-                        "moneda": str(get_moneda(doc.currency)),
-                        "tipo_de_cambio": "",
-                        "porcentaje_de_igv": str(18.00),
-                        "descuento_global": "",
-                        "total_descuento": "",
-                        "total_anticipo": "",
-                        "total_gravada": "",
-                        "total_inafecta": str(round(doc.grand_total, 2)),
-                        "total_exonerada": "",
-                        "total_igv": "",
-                        "total_gratuita": "",
-                        "total_otros_cargos": "",
-                        "total": str(round(doc.grand_total, 2)),
-                        "percepcion_tipo": "",
-                        "percepcion_base_imponible": "",
-                        "total_percepcion": "",
-                        "total_incluido_percepcion": "",
-                        "detraccion": "false",
-                        "observaciones": "",
-                        "documento_que_se_modifica_tipo": return_type,
-                        "documento_que_se_modifica_serie": return_serie,
-                        "documento_que_se_modifica_numero": return_correlativo,
-                        "tipo_de_nota_de_credito": str(codigo_nota_credito),
-                        "tipo_de_nota_de_debito": str(codigo_nota_debito),
-                        "enviar_automaticamente_a_la_sunat": "true",
-                        "enviar_automaticamente_al_cliente": "false",
-                        "codigo_unico": "",
-                        "condiciones_de_pago": "",
-                        "medio_de_pago": "",
-                        "placa_vehiculo": "",
-                        "orden_compra_servicio": "",
-                        "tabla_personalizada_codigo": "",
-                        "formato_de_pdf": ""
-                    }
-                    content['items'] = []
-                    for item in doc.components:
-                        content['items'].append({
-                            "unidad_de_medida": "ZZ",
-                            "codigo": item.fees_category,
-                            "descripcion": item.description if item.description else item.fees_category,
-                            "cantidad": "1",
-                            "valor_unitario": str(round(item.amount, 2)),
-                            "precio_unitario": str(round(item.amount, 2)),
-                            "descuento": "",
-                            "subtotal": str(round(item.amount, 2)),
-                            "tipo_de_igv": "9",
-                            "igv": "0",
-                            "total": str(round(item.amount, 2)),
-                            "anticipo_regularizacion": "false",
-                            "anticipo_documento_serie": "",
-                            "anticipo_documento_numero": ""
-                        })
+                    electronic_invoice = get_electronic_invoice(company, str(tipo_de_comprobante(doc.codigo_comprobante)), numero_comprobante)
+                    if electronic_invoice.get('codigo_hash') != "":
+                        return electronic_invoice
+                    else:
+                        content = {
+                            "operacion": "generar_comprobante",
+                            "tipo_de_comprobante": str(tipo_de_comprobante(doc.codigo_comprobante)),
+                            "serie": serie,
+                            "numero": correlativo,
+                            "sunat_transaction": doc.codigo_transaccion_sunat,
+                            "cliente_tipo_de_documento": doc.codigo_tipo_documento,
+                            "cliente_numero_de_documento": doc.tax_id.strip(),
+                            "cliente_denominacion": customer.customer_name if doc.factura_de_venta else doc.student_name,
+                            "cliente_direccion": address.address if address.get('address') else "",
+                            "cliente_email": doc.student_email if doc.student_email else "",
+                            "cliente_email_1": "",
+                            "cliente_email_2": "",
+                            "fecha_de_emision": datetime.datetime.now().strftime("%d-%m-%Y"),
+                            "fecha_de_vencimiento": datetime.datetime.now().strftime("%d-%m-%Y"),
+                            "moneda": str(get_moneda(doc.currency)),
+                            "tipo_de_cambio": "",
+                            "porcentaje_de_igv": str(18.00),
+                            "descuento_global": "",
+                            "total_descuento": "",
+                            "total_anticipo": "",
+                            "total_gravada": "",
+                            "total_inafecta": str(round(doc.grand_total, 2)),
+                            "total_exonerada": "",
+                            "total_igv": "",
+                            "total_gratuita": "",
+                            "total_otros_cargos": "",
+                            "total": str(round(doc.grand_total, 2)),
+                            "percepcion_tipo": "",
+                            "percepcion_base_imponible": "",
+                            "total_percepcion": "",
+                            "total_incluido_percepcion": "",
+                            "detraccion": "false",
+                            "observaciones": "",
+                            "documento_que_se_modifica_tipo": return_type,
+                            "documento_que_se_modifica_serie": return_serie,
+                            "documento_que_se_modifica_numero": return_correlativo,
+                            "tipo_de_nota_de_credito": str(codigo_nota_credito),
+                            "tipo_de_nota_de_debito": str(codigo_nota_debito),
+                            "enviar_automaticamente_a_la_sunat": "true",
+                            "enviar_automaticamente_al_cliente": "false",
+                            "codigo_unico": "",
+                            "condiciones_de_pago": "",
+                            "medio_de_pago": "",
+                            "placa_vehiculo": "",
+                            "orden_compra_servicio": "",
+                            "tabla_personalizada_codigo": "",
+                            "formato_de_pdf": ""
+                        }
+                        content['items'] = []
+                        for item in doc.components:
+                            content['items'].append({
+                                "unidad_de_medida": "ZZ",
+                                "codigo": item.fees_category,
+                                "descripcion": item.description if item.description else item.fees_category,
+                                "cantidad": "1",
+                                "valor_unitario": str(round(item.amount, 2)),
+                                "precio_unitario": str(round(item.amount, 2)),
+                                "descuento": "",
+                                "subtotal": str(round(item.amount, 2)),
+                                "tipo_de_igv": "9",
+                                "igv": "0",
+                                "total": str(round(item.amount, 2)),
+                                "anticipo_regularizacion": "false",
+                                "anticipo_documento_serie": "",
+                                "anticipo_documento_numero": ""
+                            })
                 elif doctype == "Sales Invoice":
                     multi  = 1
                     monto_anticipo_neto = igv_anticipo = anticipo_amount = anticipo_total = 0
@@ -149,7 +153,7 @@ def send_document(company, invoice, doctype):
                             "numero": correlativo,
                             "sunat_transaction": doc.codigo_transaccion_sunat,
                             "cliente_tipo_de_documento": doc.codigo_tipo_documento,
-                            "cliente_numero_de_documento": doc.tax_id,
+                            "cliente_numero_de_documento": doc.tax_id.strip(),
                             "cliente_denominacion": party_name,
                             "cliente_direccion": address.address if address.get('address') else "",
                             "cliente_email": address.email if address.get('email') else "",
@@ -288,7 +292,7 @@ def send_document(company, invoice, doctype):
                         "serie": serie,
                         "numero": correlativo,
                         "cliente_tipo_de_documento": doc.codigo_tipo_documento,
-                        "cliente_numero_de_documento": doc.tax_id,
+                        "cliente_numero_de_documento": doc.tax_id.strip(),
                         "cliente_denominacion": doc.customer_name,
                         "cliente_direccion": address.getaddress if address.get('address') else "",
                         "cliente_email": address.email if address.get('email') else "",
@@ -340,6 +344,20 @@ def send_document(company, invoice, doctype):
             return ""
     else:
         return ""
+
+def get_electronic_invoice(company, tipo_de_comprobante, numero_comprobante):
+    tipo, serie, correlativo = numero_comprobante.split('-')
+    url = get_url(company)
+    headers = get_autentication(company)
+    if url != "" and headers != "":
+        content = {
+            "operacion": "consultar_comprobante",
+            "tipo_de_comprobante": tipo_de_comprobante,
+            "serie": serie,
+            "numero": correlativo
+        }
+    response = requests.post(url, headers=headers, data=json.dumps(content))
+    return json.loads(response.content)
 
 @frappe.whitelist()
 def consult_document(company, invoice, doctype):
