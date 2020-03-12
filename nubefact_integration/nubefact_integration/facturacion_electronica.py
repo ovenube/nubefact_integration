@@ -253,7 +253,8 @@ def send_document(company, invoice, doctype):
                                 total = round(item.amount, 2) * multi
                             else:
                                 tipo_igv = "9"
-                                precio_unitario = round(item.net_rate, 4)
+                                precio_unitario = round(item.rate, 4)
+                                total = round(item.amount, 2) * multi
                             content['items'].append({
                                 "unidad_de_medida": tipo_producto,
                                 "codigo": item.item_code,
