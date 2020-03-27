@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import frappe
 import datetime
-from nubefact_integration.facturacion_electronica import consult_cancel_document
+from nubefact_integration.nubefact_integration.facturacion_electronica import consult_cancel_document
 
 def daily():
     canceled_sales = frappe.get_all("Sales Invoice", filters={'estado_anulacion': 'En proceso'},
