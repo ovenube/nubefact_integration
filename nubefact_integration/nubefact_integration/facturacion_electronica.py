@@ -153,7 +153,7 @@ def send_document(company, invoice, doctype):
                             "numero": correlativo,
                             "sunat_transaction": doc.codigo_transaccion_sunat,
                             "cliente_tipo_de_documento": doc.codigo_tipo_documento,
-                            "cliente_numero_de_documento": doc.tax_id.strip(),
+                            "cliente_numero_de_documento": doc.tax_id.strip() if doc.tax_id else "",
                             "cliente_denominacion": party_name,
                             "cliente_direccion": address.address if address.get('address') else "",
                             "cliente_email": address.email if address.get('email') else "",
