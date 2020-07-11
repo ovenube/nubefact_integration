@@ -78,13 +78,12 @@ after_install = "nubefact_integration.install.after_install"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-#	}
-# }
+doc_events = {
+	"Sales Invoice": {
+        "before_insert": "nubefact_integration.nubefact_integration.facturacion_electronica.set_electronic_invoice_fields",
+		"before_submit": "nubefact_integration.nubefact_integration.facturacion_electronica.send_electronic_invoice",
+	}
+}
 
 # Scheduled Tasks
 # ---------------
