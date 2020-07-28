@@ -40,7 +40,7 @@ def get_cuentas_bancarias(company, currency):
     return cuenta_bancaria if cuenta_bancaria else ""
 
 @frappe.whitelist()
-def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_documento="", codigo_comprobante="", es_nota_debito=""):
+def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_documento="", codigo_comprobante="", es_nota_debito="", online=None):
     doc_series = []
     configuracion = frappe.get_doc("Configuracion Nubefact", company)
     if doctype == "Sales Invoice":
@@ -98,7 +98,11 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                 else:
                     series = configuracion.serie_factura
                     for serie in series:
-                        doc_series.append(serie.serie_factura)
+                        if online is not None:
+                            if serie.online == online:
+                                doc_series.append(serie.serie_factura)
+                        else:
+                            doc_series.append(serie.serie_factura)
             else:
                 comprobante = frappe.get_doc("Tipos de Comprobante", "Boleta de Venta")
                 if contingencia == "1":
@@ -108,7 +112,11 @@ def get_doc_serie(company, doctype, is_return="", contingencia="", codigo_tipo_d
                 else:
                     series = configuracion.serie_boleta
                     for serie in series:
-                        doc_series.append(serie.serie_boleta)
+                        if online is not None:
+                            if serie.online == online:
+                                doc_series.append(serie.serie_boleta)
+                        else:
+                            doc_series.append(serie.serie_boleta)
     elif doctype == "Fees":
         if is_return == "1":
             comprobante = frappe.get_doc("Tipos de Comprobante", "Nota de Crédito")
