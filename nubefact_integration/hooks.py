@@ -82,7 +82,10 @@ doc_events = {
 	"Sales Invoice": {
         "before_insert": "nubefact_integration.nubefact_integration.facturacion_electronica.set_electronic_invoice_fields",
 		"before_submit": "nubefact_integration.nubefact_integration.facturacion_electronica.send_electronic_invoice",
-	}
+	},
+    "Payment Entry": {
+        "after_submit": "nubefact_integration.nubefact_integration.facturacion_electronica.send_fees_invoice"
+    }
 }
 
 # Scheduled Tasks
