@@ -84,7 +84,7 @@ doc_events = {
 		"before_submit": "nubefact_integration.nubefact_integration.facturacion_electronica.send_electronic_invoice",
 	},
     "Payment Entry": {
-        "after_submit": "nubefact_integration.nubefact_integration.facturacion_electronica.send_fees_invoice"
+        "before_submit": "nubefact_integration.nubefact_integration.facturacion_electronica.send_fees_invoice"
     }
 }
 

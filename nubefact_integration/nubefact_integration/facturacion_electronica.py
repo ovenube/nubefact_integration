@@ -552,31 +552,31 @@ def set_fees_fields(doc):
         doc.save()
 
 def send_fees_invoice(doc, method=None):
-    if doc.get("fees"):
-        fees = frappe.get_doc("Fees", doc.fees)
-        set_fees_fields(fees)
-        invoice = send_document(company=fees.company, invoice=fees.name, doctype=fees.doctype)
-        if fees.is_return == 1:
-            fees.numero_nota_credito = invoice.numero_nota_credito
-            fees.fecha_nota_credito = utils.now_datetime()
+    if doc.get("fee"):
+        fee = frappe.get_doc("Fees", doc.fee)
+        set_fees_fields(fee)
+        invoice = send_document(company=fee.company, invoice=fee.name, doctype=fee.doctype)
+        if fee.is_return == 1:
+            fee.numero_nota_credito = invoice.numero_nota_credito
+            fee.fecha_nota_credito = utils.now_datetime()
         else:
-            fees.numero_comprobante = invoice.numero_comprobante
-            fees.fecha_comprobante = utils.now_datetime()
-        fees.save()
+            fee.numero_comprobante = invoice.numero_comprobante
+            fee.fecha_comprobante = utils.now_datetime()
+        fee.save()
         if invoice.get('codigo_hash'):
-            fees.estado_sunat = "Aceptado" if invoice.get('codigo_hash') else "Rechazado"
-            fees.respuesta_sunat = invoice.sunat_description
-            fees.codigo_qr_sunat = invoice.cadena_para_codigo_qr
-            fees.enlace_pdf = invoice.enlace_del_pdf
-            fees.codigo_hash_sunat = invoice.codigo_hash
-            fees.save()
+            fee.estado_sunat = "Aceptado" if invoice.get('codigo_hash') else "Rechazado"
+            fee.respuesta_sunat = invoice.sunat_description
+            fee.codigo_qr_sunat = invoice.cadena_para_codigo_qr
+            fee.enlace_pdf = invoice.enlace_del_pdf
+            fee.codigo_hash_sunat = invoice.codigo_hash
+            fee.save()
         else:
-            revert_fee_numero_comprobante(serie_comprobante=fees.serie_comprobante, numero_comprobante=fees.numero_comprobante, 
-                serie_nota_credito=fees.serie_nota_credito, numero_nota_credito=fees.numero_nota_credito)
-            if fees.is_return == 1:
-                fees.numero_nota_credito = ""
-                fees.fecha_nota_credito = ""
+            revert_fee_numero_comprobante(serie_comprobante=fee.serie_comprobante, numero_comprobante=fee.numero_comprobante, 
+                serie_nota_credito=fee.serie_nota_credito, numero_nota_credito=fee.numero_nota_credito)
+            if fee.is_return == 1:
+                fee.numero_nota_credito = ""
+                fee.fecha_nota_credito = ""
             else:
-                fees.numero_comprobante = ""
-                fees.fecha_comprobante = ""
-            fees.save()
+                fee.numero_comprobante = ""
+                fee.fecha_comprobante = ""
+            fee.save()
