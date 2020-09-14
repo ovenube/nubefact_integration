@@ -5,7 +5,7 @@ import frappe
 from nubefact_integration.nubefact_integration.doctype.autenticacion_nubefact.autenticacion_nubefact import get_autentication, get_url
 from nubefact_integration.nubefact_integration.doctype.configuracion_nubefact.configuracion_nubefact import get_cuentas_bancarias, get_doc_serie
 from nubefact_integration.nubefact_integration.utils import *
-from nubefact_integration.nubefact_integration.doctype.tipos_de_transaccion_sunat.tipos_de_transaccion_sunat import get_tipo_transaccion
+from nubefact_integration.nubefact_integration.doctype.tipos_de_transaccion_sunat.tipos_de_transaccion_sunat import get_tipo_transaccion, get_tipo_transaccion_fee
 from erpnext.controllers.taxes_and_totals import get_plastic_bags_information
 from frappe import utils
 
@@ -542,14 +542,14 @@ def set_fees_fields(doc):
         else:
             doc.codigo_tipo_documento = student.codigo_tipo_documento
             doc.tipo_documento_identidad = student.tipo_documento_identidad
-            tipo_transaccion = get_tipo_transaccion(customer=doc.razon_social)
+            tipo_transaccion = get_tipo_transaccion_fee(student=doc.student)
         doc.tipo_transaccion_sunat = tipo_transaccion.get('descripcion')
         doc.codigo_transaccion_sunat = tipo_transaccion.get('codigo')
         doc_serie = get_doc_serie(company=doc.company, doctype=doc.doctype, is_return=doc.is_return, 
             contingencia=doc.contingencia, codigo_tipo_documento=doc.codigo_tipo_documento,
             online = enable_electronic_invoice)
         doc.serie_comprobante = doc_serie.get('series')[0]
-        doc.save()
+        doc.save(ignore_permissions=True)
 
 def send_fees_invoice(doc, method=None):
     if doc.get("fee"):
