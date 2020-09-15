@@ -536,18 +536,21 @@ def set_fees_fields(doc):
             doc.factura_de_venta = 1
             doc.razon_social = student.razon_social
             doc.direccion = student.direccion
-            doc.codigo_tipo_documento = frappe.get_value("Customer", doc.razon_social, "codigo_tipo_documento")
-            doc.tipo_documento_identidad = frappe.get_value("Customer", doc.razon_social, "tipo_documento_identidad")
             tipo_transaccion = get_tipo_transaccion(customer=doc.razon_social)
         else:
             doc.codigo_tipo_documento = student.codigo_tipo_documento
             doc.tipo_documento_identidad = student.tipo_documento_identidad
             tipo_transaccion = get_tipo_transaccion_fee(student=doc.student)
+        doc.codigo_tipo_documento = student.codigo_tipo_documento
+        doc.tipo_documento_identidad = student.tipo_documento_identidad
+        doc.tax_id = student.tax_id
         doc.tipo_transaccion_sunat = tipo_transaccion.get('descripcion')
         doc.codigo_transaccion_sunat = tipo_transaccion.get('codigo')
         doc_serie = get_doc_serie(company=doc.company, doctype=doc.doctype, is_return=doc.is_return, 
             contingencia=doc.contingencia, codigo_tipo_documento=doc.codigo_tipo_documento,
             online = enable_electronic_invoice)
+        doc.tipo_comprobante = doc_serie.get('descripcion')
+        doc.codigo_comprobante = doc_serie.get('codigo')
         doc.serie_comprobante = doc_serie.get('series')[0]
         doc.save(ignore_permissions=True)
 
@@ -555,28 +558,23 @@ def send_fees_invoice(doc, method=None):
     if doc.get("fee"):
         fee = frappe.get_doc("Fees", doc.fee)
         set_fees_fields(fee)
-        invoice = send_document(company=fee.company, invoice=fee.name, doctype=fee.doctype)
-        if fee.is_return == 1:
-            fee.numero_nota_credito = invoice.numero_nota_credito
-            fee.fecha_nota_credito = utils.now_datetime()
-        else:
-            fee.numero_comprobante = invoice.numero_comprobante
-            fee.fecha_comprobante = utils.now_datetime()
-        fee.save()
-        if invoice.get('codigo_hash'):
-            fee.estado_sunat = "Aceptado" if invoice.get('codigo_hash') else "Rechazado"
-            fee.respuesta_sunat = invoice.sunat_description
-            fee.codigo_qr_sunat = invoice.cadena_para_codigo_qr
-            fee.enlace_pdf = invoice.enlace_del_pdf
-            fee.codigo_hash_sunat = invoice.codigo_hash
-            fee.save()
-        else:
-            revert_fee_numero_comprobante(serie_comprobante=fee.serie_comprobante, numero_comprobante=fee.numero_comprobante, 
-                serie_nota_credito=fee.serie_nota_credito, numero_nota_credito=fee.numero_nota_credito)
-            if fee.is_return == 1:
-                fee.numero_nota_credito = ""
-                fee.fecha_nota_credito = ""
+        serie_comprobante = fee.serie_comprobante
+        numero_comprobante = generate_fee_numero_comprobante(serie_comprobante)
+        tipo, serie, correlativo = get_serie_correlativo(numero_comprobante)
+        online = get_serie_online(fee.company, tipo + "-" + serie)
+        if online:
+            invoice = send_document(company=fee.company, invoice=fee.name, doctype=fee.doctype)
+            if invoice.get('codigo_hash'):
+                fee.estado_sunat = "Aceptado" if invoice.get('codigo_hash') else "Rechazado"
+                fee.respuesta_sunat = invoice.get("sunat_description")
+                fee.codigo_qr_sunat = invoice.get("cadena_para_codigo_qr")
+                fee.enlace_pdf = invoice.get("enlace_del_pdf")
+                fee.codigo_hash_sunat = invoice.get("codigo_hash")
+                fee.numero_comprobante = numero_comprobante
+                fee.fecha_comprobante = frappe.utils.today()
             else:
+                revert_fee_numero_comprobante(serie_comprobante=fee.serie_comprobante, numero_comprobante=fee.numero_comprobante, 
+                    serie_nota_credito=fee.serie_nota_credito, numero_nota_credito=fee.numero_nota_credito)
                 fee.numero_comprobante = ""
                 fee.fecha_comprobante = ""
-            fee.save()
+            fee.save(ignore_permissions=True)
