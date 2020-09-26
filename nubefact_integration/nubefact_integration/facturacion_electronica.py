@@ -341,7 +341,8 @@ def send_document(company, invoice, doctype):
                     data["numero_comprobante"] = numero_comprobante
                     if serie_nota_credito:
                         data["numero_nota_credito"] = numero_nota_credito
-            except:
+            except Exception as e:
+                print(e)
                 return ""
             else:
                 return data
