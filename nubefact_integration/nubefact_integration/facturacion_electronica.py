@@ -37,6 +37,7 @@ def send_document(company, invoice, doctype):
             try:
                 if doctype == 'Fees':
                     doc = frappe.get_doc("Fees", invoice)
+                    student_email = frappe.get_value("Student", doc.student, "student_email")
                     if doc.is_return == 1:
                         tipo, return_serie, return_correlativo = get_serie_correlativo(numero_comprobante)
                         codigo_nota_credito = doc.codigo_nota_credito
@@ -58,7 +59,7 @@ def send_document(company, invoice, doctype):
                             "cliente_numero_de_documento": doc.tax_id.strip(),
                             "cliente_denominacion": customer.customer_name if doc.factura_de_venta else doc.student_name,
                             "cliente_direccion": address.address if address.get('address') else "",
-                            "cliente_email": doc.student_email if doc.student_email else "",
+                            "cliente_email": student_email if student_email else "",
                             "cliente_email_1": "",
                             "cliente_email_2": "",
                             "fecha_de_emision": datetime.datetime.now().strftime("%d-%m-%Y"),
