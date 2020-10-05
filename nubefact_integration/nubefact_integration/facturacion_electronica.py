@@ -37,7 +37,7 @@ def send_document(company, invoice, doctype):
             try:
                 if doctype == 'Fees':
                     doc = frappe.get_doc("Fees", invoice)
-                    student_email = frappe.get_value("Student", doc.student, "student_email")
+                    student_email = frappe.get_value("Student", doc.student, "student_email_id")
                     if doc.is_return == 1:
                         tipo, return_serie, return_correlativo = get_serie_correlativo(numero_comprobante)
                         codigo_nota_credito = doc.codigo_nota_credito
@@ -344,7 +344,7 @@ def send_document(company, invoice, doctype):
                         data["numero_nota_credito"] = numero_nota_credito
             except Exception as e:
                 print(e)
-                return ""
+                return e
             else:
                 return data
         else:
