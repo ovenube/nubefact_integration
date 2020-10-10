@@ -575,8 +575,7 @@ def send_fees_invoice(doc, method=None):
                 fee.numero_comprobante = numero_comprobante
                 fee.fecha_comprobante = frappe.utils.today()
             else:
-                revert_fee_numero_comprobante(serie_comprobante=fee.serie_comprobante, numero_comprobante=fee.numero_comprobante, 
-                    serie_nota_credito=fee.serie_nota_credito, numero_nota_credito=fee.numero_nota_credito)
+                revert_fee_numero_comprobante(serie_comprobante=fee.serie_comprobante, numero_comprobante=fee.numero_comprobante)
                 fee.numero_comprobante = ""
                 fee.fecha_comprobante = ""
             fee.save(ignore_permissions=True)
