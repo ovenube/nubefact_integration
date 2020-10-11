@@ -34,6 +34,9 @@ def send_document(company, invoice, doctype):
         if url != "" and headers != "":
             return_type = return_serie = return_correlativo = codigo_nota_credito = codigo_nota_debito = party_name = ""
             address = {}
+            if frappe.db.exists("Electronic Invoice Request", invoice):
+                request = frappe.get_doc("Electronic Invoice Request", invoice)
+                return json.loads(request.response)
             try:
                 if doctype == 'Fees':
                     doc = frappe.get_doc("Fees", invoice)
@@ -342,6 +345,14 @@ def send_document(company, invoice, doctype):
                     data["numero_comprobante"] = numero_comprobante
                     if serie_nota_credito:
                         data["numero_nota_credito"] = numero_nota_credito
+                request = frappe.get_doc({
+                    "doctype": "Electronic Invoice Request",
+                    "sales_invoice": invoice,
+                    "date": request_date,
+                    "request": json.dumps(content),
+                    "response": response.content
+                })
+                request.save(ignore_permissions=True)
             except Exception as e:
                 print(e)
                 return e
