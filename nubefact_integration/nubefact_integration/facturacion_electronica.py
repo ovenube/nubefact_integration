@@ -34,9 +34,6 @@ def send_document(company, invoice, doctype):
         if url != "" and headers != "":
             return_type = return_serie = return_correlativo = codigo_nota_credito = codigo_nota_debito = party_name = ""
             address = {}
-            if frappe.db.exists("Electronic Invoice Request", invoice):
-                request = frappe.get_doc("Electronic Invoice Request", invoice)
-                return json.loads(request.response)
             try:
                 if doctype == 'Fees':
                     doc = frappe.get_doc("Fees", invoice)
@@ -347,8 +344,9 @@ def send_document(company, invoice, doctype):
                         data["numero_nota_credito"] = numero_nota_credito
                 request = frappe.get_doc({
                     "doctype": "Electronic Invoice Request",
-                    "sales_invoice": invoice,
-                    "date": request_date,
+                    "document_type": doc.doctype,
+                    "document_name": doc.name,
+                    "date": doc.get("posting_date"),
                     "request": json.dumps(content),
                     "response": response.content
                 })
@@ -577,16 +575,20 @@ def send_fees_invoice(doc, method=None):
         online = get_serie_online(fee.company, tipo + "-" + serie)
         if online:
             invoice = send_document(company=fee.company, invoice=fee.name, doctype=fee.doctype)
-            if invoice.get('codigo_hash'):
-                fee.estado_sunat = "Aceptado" if invoice.get('codigo_hash') else "Rechazado"
-                fee.respuesta_sunat = invoice.get("sunat_description")
-                fee.codigo_qr_sunat = invoice.get("cadena_para_codigo_qr")
-                fee.enlace_pdf = invoice.get("enlace_del_pdf")
-                fee.codigo_hash_sunat = invoice.get("codigo_hash")
-                fee.numero_comprobante = numero_comprobante
-                fee.fecha_comprobante = frappe.utils.today()
+            if invoice:
+                if invoice.get('codigo_hash'):
+                    fee.estado_sunat = "Aceptado" if invoice.get('codigo_hash') else "Rechazado"
+                    fee.respuesta_sunat = invoice.get("sunat_description")
+                    fee.codigo_qr_sunat = invoice.get("cadena_para_codigo_qr")
+                    fee.enlace_pdf = invoice.get("enlace_del_pdf")
+                    fee.codigo_hash_sunat = invoice.get("codigo_hash")
+                    fee.numero_comprobante = numero_comprobante
+                    fee.fecha_comprobante = frappe.utils.today()
+                else:
+                    revert_fee_numero_comprobante(serie_comprobante=serie_comprobante, numero_comprobante=numero_comprobante)
+                    fee.numero_comprobante = ""
+                    fee.fecha_comprobante = ""
+                    frappe.validated = False
+                fee.save(ignore_permissions=True)
             else:
-                revert_fee_numero_comprobante(serie_comprobante=serie_comprobante, numero_comprobante=numero_comprobante)
-                fee.numero_comprobante = ""
-                fee.fecha_comprobante = ""
-            fee.save(ignore_permissions=True)
+                frappe.validated = False

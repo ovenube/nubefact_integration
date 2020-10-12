@@ -1,23 +1,17 @@
 {
- "autoname": "field:sales_invoice",
+ "autoname": "EIR.#######",
  "creation": "2020-09-21 07:49:48.124086",
  "doctype": "DocType",
  "editable_grid": 1,
  "engine": "InnoDB",
  "field_order": [
-  "sales_invoice",
+  "document_type",
+  "document_name",
   "date",
   "request",
   "response"
  ],
  "fields": [
-  {
-   "fieldname": "sales_invoice",
-   "fieldtype": "Link",
-   "label": "Sales Invoice",
-   "options": "Sales Invoice",
-   "unique": 1
-  },
   {
    "fieldname": "date",
    "fieldtype": "Date",
@@ -32,9 +26,21 @@
    "fieldname": "response",
    "fieldtype": "Text Editor",
    "label": "Response"
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "label": "Document Type",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "document_name",
+   "fieldtype": "Dynamic Link",
+   "label": "Document Name",
+   "options": "document_type"
   }
  ],
- "modified": "2020-09-21 08:24:05.454025",
+ "modified": "2020-10-12 02:08:58.793752",
  "modified_by": "Administrator",
  "module": "Nubefact Integration",
  "name": "Electronic Invoice Request",
