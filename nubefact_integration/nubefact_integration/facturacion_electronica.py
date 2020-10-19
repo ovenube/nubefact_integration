@@ -584,6 +584,7 @@ def send_fees_invoice(doc, method=None):
                     fee.codigo_hash_sunat = invoice.get("codigo_hash")
                     fee.numero_comprobante = numero_comprobante
                     fee.fecha_comprobante = frappe.utils.today()
+                    fee.add_course()
                 else:
                     revert_fee_numero_comprobante(serie_comprobante=serie_comprobante, numero_comprobante=numero_comprobante)
                     fee.numero_comprobante = ""
