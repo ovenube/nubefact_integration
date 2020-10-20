@@ -28,7 +28,7 @@ def daily():
     for fees in canceled_fees:
         fee = frappe.get_doc("Fees", fees['name'])
         if (datetime.datetime.now() - fees['hora_cancelacion']).total_seconds() > 0.25 * 3600:
-            status = consult_cancel_document(inv.company, fee.name, "Fees")
+            status = consult_cancel_document(fee.company, fee.name, "Fees")
             if status.get('aceptada_por_sunat'):
                 if status["aceptada_por_sunat"]:
                     frappe.db.sql(
