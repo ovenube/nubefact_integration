@@ -592,4 +592,5 @@ def send_fees_invoice(doc, method=None):
                     frappe.validated = False
                 fee.save(ignore_permissions=True)
             else:
+                revert_fee_numero_comprobante(serie_comprobante=serie_comprobante, numero_comprobante=numero_comprobante)
                 frappe.validated = False
