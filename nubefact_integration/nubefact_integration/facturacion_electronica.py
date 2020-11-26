@@ -43,8 +43,8 @@ def send_document(company, invoice, doctype):
                         codigo_nota_credito = doc.codigo_nota_credito
                         return_type = "1" if doc.codigo_tipo_documento == "6" else "2"
                     if doc.factura_de_venta == 1:
-                            address = get_address_information(doc.direccion)
-                            customer = frappe.get_doc("Customer", doc.razon_social)
+                        address = get_address_information(doc.direccion)
+                        customer = frappe.get_doc("Customer", doc.razon_social)
                     electronic_invoice = get_electronic_invoice(company, str(tipo_de_comprobante(doc.codigo_comprobante)), numero_comprobante)
                     if electronic_invoice.get('codigo_hash'):
                         return electronic_invoice
@@ -137,10 +137,11 @@ def send_document(company, invoice, doctype):
                     if doc.customer_address:
                         address = get_address_information(doc.customer_address)
                     if doc.codigo_transaccion_sunat == "4":
-                        advance = frappe.get_doc("Sales Invoice", doc.sales_invoice_advance)
-                        monto_anticipo_neto = round(advance.net_total, 2)
-                        anticipo_total = round(advance.grand_total)
-                        igv_anticipo, anticipo_amount, anticipo_inc = get_igv(company, advance.name, doctype)
+                        if doc.sales_invoice_advance:
+                            advance = frappe.get_doc("Sales Invoice", doc.sales_invoice_advance)
+                            monto_anticipo_neto = round(advance.net_total, 2)
+                            anticipo_total = round(advance.grand_total)
+                            igv_anticipo, anticipo_amount, anticipo_inc = get_igv(company, advance.name, doctype)
                     if doc.is_return == 1:
                         tipo, return_serie, return_correlativo = get_serie_correlativo(doc.return_against)
                         codigo_nota_credito = doc.codigo_nota_credito
@@ -202,28 +203,12 @@ def send_document(company, invoice, doctype):
                     }
                     content['items'] = []
                     if doc.codigo_transaccion_sunat == "4":
-                        advance_tipo, advance_serie, advance_correlativo = get_serie_correlativo(doc.sales_invoice_advance)
-                        content['items'].append(
-                            {
+                        if doc.sales_invoice_advance:
+                            advance_tipo, advance_serie, advance_correlativo = get_serie_correlativo(doc.sales_invoice_advance)
+                            content['items'].append({
                                 "unidad_de_medida": "NIU",
                                 "codigo": "001",
                                 "descripcion": "REGULARIZACIÓN DEL ANTICIPO",
-                                "cantidad": "1",
-                                "valor_unitario": str(round(doc.net_total, 2)),
-                                "precio_unitario": str(round(doc.grand_total, 2)),
-                                "descuento": "",
-                                "subtotal": str(round(doc.net_total, 2)),
-                                "tipo_de_igv": "1",
-                                "igv": str(round(monto_impuesto, 2)),
-                                "total": str(round(doc.grand_total, 2)),
-                                "anticipo_regularizacion": "false",
-                                "anticipo_documento_serie": "",
-                                "anticipo_documento_numero": ""
-                            }),
-                        content['items'].append({
-                                "unidad_de_medida": "NIU",
-                                "codigo": "001",
-                                "descripcion": "PRIMER ANTICIPO",
                                 "cantidad": "1",
                                 "valor_unitario": str(monto_anticipo_neto),
                                 "precio_unitario": str(anticipo_total),
@@ -236,6 +221,24 @@ def send_document(company, invoice, doctype):
                                 "anticipo_documento_serie": str(advance_serie),
                                 "anticipo_documento_numero": str(advance_correlativo)
                             })
+                        else:
+                            content['items'].append(
+                                {
+                                    "unidad_de_medida": "NIU",
+                                    "codigo": "001",
+                                    "descripcion": "PRIMER ANTICIPO",
+                                    "cantidad": "1",
+                                    "valor_unitario": str(round(doc.net_total, 2)),
+                                    "precio_unitario": str(round(doc.grand_total, 2)),
+                                    "descuento": "",
+                                    "subtotal": str(round(doc.net_total, 2)),
+                                    "tipo_de_igv": "1",
+                                    "igv": str(round(monto_impuesto, 2)),
+                                    "total": str(round(doc.grand_total, 2)),
+                                    "anticipo_regularizacion": "false",
+                                    "anticipo_documento_serie": "",
+                                    "anticipo_documento_numero": ""
+                                })
                     else:
                         for item in doc.items:
                             tipo_producto = get_tipo_producto(item.item_code)
